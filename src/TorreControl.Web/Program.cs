@@ -36,6 +36,10 @@ var cadenaConexion = builder.Configuration.GetConnectionString("TorreControl")
 
 builder.Services.AddDbContext<AppDbContext>(opciones => opciones.UseSqlServer(cadenaConexion));
 
+// La Auditoría necesita saber quién hace cada cambio: se lo dice la sesión de la petición web.
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IUsuarioActual, UsuarioActualHttp>();
+
 // ---- Identity: usuarios, contraseñas y roles ----
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(opciones =>
     {

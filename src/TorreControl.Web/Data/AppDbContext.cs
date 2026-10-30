@@ -8,10 +8,17 @@ namespace TorreControl.Web.Data;
 /// <summary>
 /// Puerta de entrada a la base de datos. Hereda de IdentityDbContext para incluir
 /// las tablas de usuarios y roles, y agrega las del negocio.
+/// La escritura automática de la Auditoría está en AppDbContext.Auditoria.cs.
 /// </summary>
-public partial class AppDbContext(DbContextOptions<AppDbContext> options)
+public partial class AppDbContext(
+    DbContextOptions<AppDbContext> options,
+    IUsuarioActual? usuarioActual = null,
+    TimeProvider? reloj = null)
     : IdentityDbContext<Usuario, IdentityRole<int>, int>(options)
 {
+    private readonly IUsuarioActual? _usuarioActual = usuarioActual;
+    private readonly TimeProvider _reloj = reloj ?? TimeProvider.System;
+
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<Planta> Plantas => Set<Planta>();
     public DbSet<Unidad> Unidades => Set<Unidad>();
