@@ -110,7 +110,12 @@ builder.Services.ConfigureApplicationCookie(opciones =>
         }
         else
         {
-            contexto.Response.Redirect(contexto.RedirectUri);
+            // Redirección relativa ("/Cuenta/Login?..."): funciona igual en localhost, en un
+            // servidor o detrás del proxy de Codespaces, sin depender del nombre del host.
+            var destino = Uri.TryCreate(contexto.RedirectUri, UriKind.Absolute, out var absoluta)
+                ? absoluta.PathAndQuery
+                : contexto.RedirectUri;
+            contexto.Response.Redirect(destino);
         }
 
         return Task.CompletedTask;
@@ -148,6 +153,8 @@ if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("DatosEj
     await alcance.ServiceProvider.GetRequiredService<DatosEjemplo>().SembrarAsync();
 }
 
+// Solo dentro de Codespaces (o detrás de otro proxy HTTPS de confianza): ver ProxyHttps.
+app.UseProxyHttps(app.Configuration);
 app.UseCabecerasSeguridad(app.Environment.IsDevelopment());
 
 if (!app.Environment.IsDevelopment())

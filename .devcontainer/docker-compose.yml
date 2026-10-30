@@ -1,0 +1,41 @@
+# Contenedores del Codespace: la app y su base de datos.
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/dotnet:2-10.0-noble
+    volumes:
+      - ../..:/workspaces:cached
+      - secretos:/secretos:ro
+    command: sleep infinity
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # El Codespace publica la app por HTTPS a través de su propio proxy (ver Program.cs).
+      Proxy__DetrasDeProxyHttps: "true"
+    depends_on:
+      - db
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    # root solo para poder escribir la contraseña generada en el volumen compartido.
+    user: root
+    environment:
+      ACCEPT_EULA: "Y"
+    # La contraseña de "sa" se genera al azar la primera vez y se comparte con la app por un
+    # volumen privado; nunca está escrita en el repositorio. La base no se publica fuera del
+    # Codespace: solo la app la ve.
+    command:
+      - /bin/bash
+      - -c
+      - |
+        if [ ! -s /secretos/sa ]; then
+          echo "Tc$$(head -c 18 /dev/urandom | od -An -tx1 | tr -d ' \n')!9" > /secretos/sa
+        fi
+        export MSSQL_SA_PASSWORD="$$(cat /secretos/sa)"
+        exec /opt/mssql/bin/sqlservr
+    volumes:
+      - secretos:/secretos
+      - datos-sql:/var/opt/mssql
+    restart: unless-stopped
+
+volumes:
+  secretos:
+  datos-sql:

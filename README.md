@@ -25,6 +25,14 @@ src/TorreControl.Web/
 tests/TorreControl.Tests/   Pruebas xUnit (unitarias y de integración con SQL Server real)
 ```
 
+## Probarlo sin instalar nada (GitHub Codespaces)
+
+[![Abrir en GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/joseivanlopzconejo-tech/Test-TC?quickstart=1)
+
+Codespaces levanta el proyecto completo en la nube (.NET 10 + SQL Server + datos de ejemplo) y lo
+abre en el navegador, incluso desde el celular. Usa las horas gratis mensuales de tu cuenta de
+GitHub. Las instrucciones aparecen solas al abrirlo (`.devcontainer/LEEME.md`).
+
 ## Cómo correrlo (Windows con LocalDB)
 
 Requisitos: [.NET 10 SDK](https://dotnet.microsoft.com/download) y SQL Server LocalDB

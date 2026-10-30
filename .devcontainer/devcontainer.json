@@ -1,0 +1,38 @@
+// Configuración para GitHub Codespaces (y "Dev Containers" de VS Code).
+// Levanta dos contenedores: la app (.NET 10) y SQL Server 2022, con datos de ejemplo.
+// No hay contraseñas aquí: se generan al azar dentro del Codespace (ver los .sh).
+{
+  "name": "Torre de Control",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "shutdownAction": "stopCompose",
+
+  // Una sola vez, al crear el Codespace: herramientas y secretos.
+  "postCreateCommand": "bash .devcontainer/preparar.sh",
+  // Cada vez que el Codespace arranca: levanta la app en segundo plano.
+  "postStartCommand": "bash .devcontainer/iniciar.sh",
+
+  "forwardPorts": [5178],
+  "portsAttributes": {
+    "5178": {
+      "label": "Torre de Control",
+      // Abre la app en el navegador en cuanto está lista.
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  // SQL Server necesita unos 2 GB de memoria; la máquina básica (2 núcleos, 8 GB) alcanza.
+  "hostRequirements": {
+    "memory": "8gb"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-dotnettools.csdevkit"]
+    },
+    "codespaces": {
+      "openFiles": [".devcontainer/LEEME.md"]
+    }
+  }
+}
