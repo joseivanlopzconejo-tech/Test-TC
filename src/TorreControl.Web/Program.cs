@@ -1,6 +1,18 @@
+using TorreControl.Web.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Reglas de negocio desde configuración. ValidateOnStart hace que la app NO arranque
+// si falta un valor o hay uno contradictorio, en vez de fallar a mitad de un turno.
+builder.Services.AddOptions<ReglasNegocioOptions>()
+    .Bind(builder.Configuration.GetSection(ReglasNegocioOptions.Seccion))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+// Reloj del sistema inyectable: las reglas de tiempo lo reciben como dependencia
+// para que las pruebas puedan "congelar" la hora.
+builder.Services.AddSingleton(TimeProvider.System);
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

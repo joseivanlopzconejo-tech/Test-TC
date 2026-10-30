@@ -19,6 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Se prueba el appsettings.json real de la app, no una copia que pueda quedar desactualizada. -->
+    <None Include="..\..\src\TorreControl.Web\appsettings.json" Link="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\TorreControl.Web\TorreControl.Web.csproj" />
   </ItemGroup>
 
