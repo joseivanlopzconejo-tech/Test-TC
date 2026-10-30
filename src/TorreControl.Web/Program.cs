@@ -1,10 +1,15 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TorreControl.Web.Data;
 using TorreControl.Web.Models;
+using TorreControl.Web.Security;
 using TorreControl.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// No anunciar qué servidor usamos ("Server: Kestrel"): es información gratis para un atacante.
+builder.WebHost.ConfigureKestrel(opciones => opciones.AddServerHeader = false);
 
 // Reglas de negocio desde configuración. ValidateOnStart hace que la app NO arranque
 // si falta un valor o hay uno contradictorio, en vez de fallar a mitad de un turno.
@@ -49,21 +54,58 @@ builder.Services.AddIdentity<Usuario, IdentityRole<int>>(opciones =>
     })
     .AddEntityFrameworkStores<AppDbContext>();
 
-builder.Services.AddControllersWithViews();
+// ---- Cookie de sesión ----
+builder.Services.ConfigureApplicationCookie(opciones =>
+{
+    opciones.Cookie.Name = "TorreControl.Sesion";
+    opciones.Cookie.HttpOnly = true;                          // JavaScript no puede leerla (si hay XSS, no se la roban)
+    opciones.Cookie.SecurePolicy = CookieSecurePolicy.Always; // solo viaja por HTTPS
+    opciones.Cookie.SameSite = SameSiteMode.Strict;           // otro sitio no puede usarla para mandar peticiones
+    // Un turno dura 8 horas. "Deslizante": cada vez que el usuario trabaja, el plazo se renueva,
+    // así no lo saca a media captura como el sistema actual.
+    opciones.ExpireTimeSpan = TimeSpan.FromHours(8);
+    opciones.SlidingExpiration = true;
+    opciones.LoginPath = "/Cuenta/Login";                     // pantallas de la Fase 1
+    opciones.AccessDeniedPath = "/Cuenta/AccesoDenegado";
+});
+
+// ---- Antiforgery (CSRF) ----
+// Todo POST debe traer un token secreto que solo nuestra página conoce. Los fetch() de
+// JavaScript lo mandan en esta cabecera (lo lee site.js de la etiqueta <meta> del layout).
+builder.Services.AddAntiforgery(opciones =>
+{
+    opciones.HeaderName = "RequestVerificationToken";
+    opciones.Cookie.Name = "TorreControl.Antiforgery";
+    opciones.Cookie.HttpOnly = true;
+    opciones.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    opciones.Cookie.SameSite = SameSiteMode.Strict;
+});
+
+// HSTS: el navegador recuerda por un año que este sitio solo se abre con HTTPS.
+builder.Services.AddHsts(opciones => opciones.MaxAge = TimeSpan.FromDays(365));
+
+builder.Services.AddControllersWithViews(opciones =>
+{
+    // Valida el token antiforgery en TODOS los POST/PUT/DELETE sin tener que acordarse
+    // de poner [ValidateAntiForgeryToken] en cada acción (los GET no lo necesitan).
+    opciones.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseCabecerasSeguridad(app.Environment.IsDevelopment());
+
 if (!app.Environment.IsDevelopment())
 {
+    // Al usuario solo se le muestra un mensaje genérico; el detalle del error queda en el log.
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -73,5 +115,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-
 app.Run();
+
+// Permite que las pruebas de integración levanten la app completa (WebApplicationFactory).
+public partial class Program;
