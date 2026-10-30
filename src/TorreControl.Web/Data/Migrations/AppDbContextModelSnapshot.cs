@@ -155,6 +155,618 @@ namespace TorreControl.Web.Data.Migrations
                     b.ToTable("UsuarioToken", (string)null);
                 });
 
+            modelBuilder.Entity("TorreControl.Web.Models.Auditoria", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Campo")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Entidad")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("EntidadId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("FechaUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("Transaccion")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ValorAnterior")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ValorNuevo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FechaUtc");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.HasIndex("Entidad", "EntidadId");
+
+                    b.ToTable("Auditoria", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Cliente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("Cliente", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.EstatusUnidad", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.ToTable("EstatusUnidad", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Color = "#D64545",
+                            Nombre = "Apagada"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Color = "#E0B020",
+                            Nombre = "Trayecto"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Color = "#2E9E5B",
+                            Nombre = "Finalizado"
+                        });
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Filtro", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CapturadoEn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CapturadoPorId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EstatusId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("HoraProgramada")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("NumeroFiltro")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Observacion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ServicioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CapturadoPorId");
+
+                    b.HasIndex("EstatusId");
+
+                    b.HasIndex("ServicioId", "NumeroFiltro")
+                        .IsUnique();
+
+                    b.ToTable("Filtro", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Filtro_Numero", "[NumeroFiltro] BETWEEN 1 AND 4");
+                        });
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Incidencia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("EsSinNovedad")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Momento")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Motivo")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ServicioId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(700)
+                        .HasColumnType("nvarchar(700)");
+
+                    b.Property<int?>("TipoIncidenciaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TipoIncidenciaId");
+
+                    b.HasIndex("ServicioId", "Momento")
+                        .IsUnique();
+
+                    b.ToTable("Incidencia", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Modificacion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CapturadoEn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CapturadoPorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EstatusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FiltroId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumeroModificacion")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CapturadoPorId");
+
+                    b.HasIndex("EstatusId");
+
+                    b.HasIndex("FiltroId", "NumeroModificacion")
+                        .IsUnique();
+
+                    b.ToTable("Modificacion", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Modulo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.ToTable("Modulo", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.ModuloPlanta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ModuloId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlantaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlantaId");
+
+                    b.HasIndex("ModuloId", "PlantaId")
+                        .IsUnique();
+
+                    b.ToTable("ModuloPlanta", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.ModuloUsuario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly?>("FechaFin")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("FechaInicio")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ModuloId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModuloId");
+
+                    b.HasIndex("UsuarioId", "FechaInicio");
+
+                    b.ToTable("ModuloUsuario", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Operador", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Clave")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Coordinador")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Supervisor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Clave")
+                        .IsUnique();
+
+                    b.ToTable("Operador", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Planta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Municipio")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.ToTable("Planta", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Ruta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NombreRuta")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("PlantaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TipoServicio")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlantaId", "NombreRuta", "TipoServicio")
+                        .IsUnique();
+
+                    b.ToTable("Ruta", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Servicio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("Aforo")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreadoPorId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("EsEspecial")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("EstatusId")
+                        .HasColumnType("int");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<TimeOnly>("Hip")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime?>("Hir")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("HirModificaciones")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("Htp")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime?>("Htr")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("HtrModificaciones")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("OperadorId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("RutaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Turno")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UnidadTitularId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreadoPorId");
+
+                    b.HasIndex("EstatusId");
+
+                    b.HasIndex("Fecha");
+
+                    b.HasIndex("OperadorId");
+
+                    b.HasIndex("UnidadTitularId");
+
+                    b.HasIndex("RutaId", "Fecha");
+
+                    b.ToTable("Servicio", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Servicio_Aforo", "[Aforo] IS NULL OR [Aforo] >= 0");
+
+                            t.HasCheckConstraint("CK_Servicio_Turno", "[Turno] BETWEEN 1 AND 3");
+                        });
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.TipoIncidencia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.ToTable("TipoIncidencia", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Nombre = "Tráfico"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Nombre = "Falla mecánica"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Nombre = "Operador"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Nombre = "Cliente"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Nombre = "Otro"
+                        });
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Unidad", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Numero")
+                        .IsUnique();
+
+                    b.ToTable("Unidad", (string)null);
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.UnidadApoyo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Orden")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ServicioId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UnidadId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UnidadId");
+
+                    b.HasIndex("ServicioId", "Orden")
+                        .IsUnique();
+
+                    b.HasIndex("ServicioId", "UnidadId")
+                        .IsUnique();
+
+                    b.ToTable("UnidadApoyo", (string)null);
+                });
+
             modelBuilder.Entity("TorreControl.Web.Models.Usuario", b =>
                 {
                     b.Property<int>("Id")
@@ -280,6 +892,225 @@ namespace TorreControl.Web.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Filtro", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Usuario", "CapturadoPor")
+                        .WithMany()
+                        .HasForeignKey("CapturadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TorreControl.Web.Models.EstatusUnidad", "Estatus")
+                        .WithMany()
+                        .HasForeignKey("EstatusId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TorreControl.Web.Models.Servicio", "Servicio")
+                        .WithMany("Filtros")
+                        .HasForeignKey("ServicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CapturadoPor");
+
+                    b.Navigation("Estatus");
+
+                    b.Navigation("Servicio");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Incidencia", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Servicio", "Servicio")
+                        .WithMany("Incidencias")
+                        .HasForeignKey("ServicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TorreControl.Web.Models.TipoIncidencia", "TipoIncidencia")
+                        .WithMany()
+                        .HasForeignKey("TipoIncidenciaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Servicio");
+
+                    b.Navigation("TipoIncidencia");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Modificacion", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Usuario", "CapturadoPor")
+                        .WithMany()
+                        .HasForeignKey("CapturadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TorreControl.Web.Models.EstatusUnidad", "Estatus")
+                        .WithMany()
+                        .HasForeignKey("EstatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TorreControl.Web.Models.Filtro", "Filtro")
+                        .WithMany("Modificaciones")
+                        .HasForeignKey("FiltroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CapturadoPor");
+
+                    b.Navigation("Estatus");
+
+                    b.Navigation("Filtro");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.ModuloPlanta", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Modulo", "Modulo")
+                        .WithMany("Plantas")
+                        .HasForeignKey("ModuloId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TorreControl.Web.Models.Planta", "Planta")
+                        .WithMany()
+                        .HasForeignKey("PlantaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Modulo");
+
+                    b.Navigation("Planta");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.ModuloUsuario", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Modulo", "Modulo")
+                        .WithMany("Usuarios")
+                        .HasForeignKey("ModuloId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TorreControl.Web.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Modulo");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Planta", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Cliente", "Cliente")
+                        .WithMany("Plantas")
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Ruta", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Planta", "Planta")
+                        .WithMany("Rutas")
+                        .HasForeignKey("PlantaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Planta");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Servicio", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Usuario", "CreadoPor")
+                        .WithMany()
+                        .HasForeignKey("CreadoPorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TorreControl.Web.Models.EstatusUnidad", "Estatus")
+                        .WithMany()
+                        .HasForeignKey("EstatusId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TorreControl.Web.Models.Operador", "Operador")
+                        .WithMany()
+                        .HasForeignKey("OperadorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("TorreControl.Web.Models.Ruta", "Ruta")
+                        .WithMany()
+                        .HasForeignKey("RutaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("TorreControl.Web.Models.Unidad", "UnidadTitular")
+                        .WithMany()
+                        .HasForeignKey("UnidadTitularId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CreadoPor");
+
+                    b.Navigation("Estatus");
+
+                    b.Navigation("Operador");
+
+                    b.Navigation("Ruta");
+
+                    b.Navigation("UnidadTitular");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.UnidadApoyo", b =>
+                {
+                    b.HasOne("TorreControl.Web.Models.Servicio", "Servicio")
+                        .WithMany("UnidadesApoyo")
+                        .HasForeignKey("ServicioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TorreControl.Web.Models.Unidad", "Unidad")
+                        .WithMany()
+                        .HasForeignKey("UnidadId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Servicio");
+
+                    b.Navigation("Unidad");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Cliente", b =>
+                {
+                    b.Navigation("Plantas");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Filtro", b =>
+                {
+                    b.Navigation("Modificaciones");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Modulo", b =>
+                {
+                    b.Navigation("Plantas");
+
+                    b.Navigation("Usuarios");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Planta", b =>
+                {
+                    b.Navigation("Rutas");
+                });
+
+            modelBuilder.Entity("TorreControl.Web.Models.Servicio", b =>
+                {
+                    b.Navigation("Filtros");
+
+                    b.Navigation("Incidencias");
+
+                    b.Navigation("UnidadesApoyo");
                 });
 #pragma warning restore 612, 618
         }
