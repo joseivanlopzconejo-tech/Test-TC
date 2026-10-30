@@ -50,6 +50,43 @@ namespace TorreControl.Web.Data.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("Rol", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ConcurrencyStamp = "rol-1",
+                            Name = "Monitorista",
+                            NormalizedName = "MONITORISTA"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ConcurrencyStamp = "rol-2",
+                            Name = "SupervisorApoyo",
+                            NormalizedName = "SUPERVISORAPOYO"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ConcurrencyStamp = "rol-3",
+                            Name = "SupervisorOperaciones",
+                            NormalizedName = "SUPERVISOROPERACIONES"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ConcurrencyStamp = "rol-4",
+                            Name = "JefeMonitoreo",
+                            NormalizedName = "JEFEMONITOREO"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ConcurrencyStamp = "rol-5",
+                            Name = "Sistemas",
+                            NormalizedName = "SISTEMAS"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>

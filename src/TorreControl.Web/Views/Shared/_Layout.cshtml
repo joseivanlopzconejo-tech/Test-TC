@@ -1,4 +1,9 @@
+@using TorreControl.Web.Security
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var conSesion = User.Identity?.IsAuthenticated == true;
+    var sesionExpira = Context.Items[SesionDeslizante.ClaveExpira] as DateTimeOffset?;
+}
 <!DOCTYPE html>
 @* Tema oscuro por defecto: los monitoristas trabajan de noche (el selector claro/oscuro llega en la Fase 2). *@
 <html lang="es" data-bs-theme="dark">
@@ -7,6 +12,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     @* Token CSRF para los fetch() de JavaScript; site.js lo manda en la cabecera RequestVerificationToken. *@
     <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+    @if (conSesion && sesionExpira is not null)
+    {
+        @* Hora (UTC) en que vence la sesión; sesion.js avisa unos minutos antes. *@
+        <meta name="sesion-expira" content="@sesionExpira.Value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ")" />
+    }
     <title>@ViewData["Title"] · Torre de Control</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -16,16 +26,34 @@
         <nav class="navbar navbar-expand-sm">
             <div class="container-fluid">
                 <a class="navbar-brand tc-marca" asp-controller="Home" asp-action="Index">Torre de Control</a>
+                @if (conSesion)
+                {
+                    <div class="d-flex align-items-center gap-3 ms-auto">
+                        <span class="small text-body-secondary">@User.FindFirst(FabricaClaimsTorre.ClaimNombre)?.Value</span>
+                        <form asp-controller="Cuenta" asp-action="Logout" method="post" class="m-0">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Cerrar sesión</button>
+                        </form>
+                    </div>
+                }
             </div>
         </nav>
     </header>
     <main role="main" class="container-fluid py-3">
         @RenderBody()
     </main>
+    @* Aviso de sesión por vencer (lo muestra sesion.js). *@
+    <div id="tc-aviso-sesion" class="tc-aviso-sesion" role="alert" hidden>
+        <span id="tc-aviso-sesion-texto"></span>
+        <button type="button" id="tc-aviso-sesion-boton" class="btn btn-sm btn-primary">Seguir trabajando</button>
+    </div>
     @* Sin scripts en línea: la política CSP solo permite archivos servidos por la propia app. *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @if (conSesion)
+    {
+        <script src="~/js/sesion.js" asp-append-version="true"></script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

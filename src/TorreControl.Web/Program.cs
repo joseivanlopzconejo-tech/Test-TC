@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -65,7 +67,16 @@ builder.Services.AddIdentity<Usuario, IdentityRole<int>>(opciones =>
         // No hay correos en este sistema; el identificador es el número de empleado.
         opciones.User.RequireUniqueEmail = false;
     })
-    .AddEntityFrameworkStores<AppDbContext>();
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddSignInManager<SignInManagerTorre>()            // + regla "usuario desactivado no entra"
+    .AddClaimsPrincipalFactory<FabricaClaimsTorre>();  // + nombre del usuario en la cookie
+
+// Cada 5 minutos se revisa que la sesión siga siendo válida (usuario activo, contraseña no
+// cambiada). Así, desactivar a alguien le cierra la sesión en minutos y no hasta 8 horas después.
+builder.Services.Configure<SecurityStampValidatorOptions>(o => o.ValidationInterval = TimeSpan.FromMinutes(5));
+
+builder.Services.AddScoped<ServicioInicioSesion>();
+builder.Services.AddLimiteLogin(builder.Configuration);
 
 // ---- Cookie de sesión ----
 builder.Services.ConfigureApplicationCookie(opciones =>
@@ -78,8 +89,29 @@ builder.Services.ConfigureApplicationCookie(opciones =>
     // así no lo saca a media captura como el sistema actual.
     opciones.ExpireTimeSpan = TimeSpan.FromHours(8);
     opciones.SlidingExpiration = true;
-    opciones.LoginPath = "/Cuenta/Login";                     // pantallas de la Fase 1
+    opciones.LoginPath = "/Cuenta/Login";
     opciones.AccessDeniedPath = "/Cuenta/AccesoDenegado";
+    // Para que la página avise antes de que la sesión venza (ver sesion.js).
+    SesionDeslizante.Configurar(opciones);
+
+    // Las llamadas de JavaScript a /api no deben recibir la página de login como respuesta:
+    // se les contesta 401 (sin sesión) o 403 (sin permiso) para que la tabla lo maneje.
+    opciones.Events.OnRedirectToLogin = contexto => ResponderApi(contexto, StatusCodes.Status401Unauthorized);
+    opciones.Events.OnRedirectToAccessDenied = contexto => ResponderApi(contexto, StatusCodes.Status403Forbidden);
+
+    static Task ResponderApi(RedirectContext<CookieAuthenticationOptions> contexto, int codigo)
+    {
+        if (contexto.Request.Path.StartsWithSegments("/api"))
+        {
+            contexto.Response.StatusCode = codigo;
+        }
+        else
+        {
+            contexto.Response.Redirect(contexto.RedirectUri);
+        }
+
+        return Task.CompletedTask;
+    }
 });
 
 // ---- Antiforgery (CSRF) ----
@@ -117,6 +149,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

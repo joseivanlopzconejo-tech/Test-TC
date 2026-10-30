@@ -37,3 +37,42 @@ body {
   padding: 1.25rem;
   max-width: 40rem;
 }
+
+.tc-login {
+  max-width: 24rem;
+  margin: 8vh auto 0;
+}
+
+.tc-error-login:empty,
+.tc-error-login.validation-summary-valid {
+  display: none;
+}
+
+.tc-error-login ul {
+  margin: 0 0 1rem;
+  padding: .6rem .8rem;
+  list-style: none;
+  border: 1px solid #a33;
+  border-radius: 8px;
+  background: rgba(214, 69, 69, .12);
+  font-size: .9rem;
+}
+
+.tc-aviso-sesion {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .6rem .8rem;
+  background: var(--tc-superficie);
+  border: 1px solid var(--tc-acento);
+  border-radius: var(--tc-radio);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
+  z-index: 1080;
+}
+
+.tc-aviso-sesion[hidden] {
+  display: none;
+}

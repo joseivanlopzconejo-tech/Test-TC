@@ -215,5 +215,16 @@ public partial class AppDbContext(
             new TipoIncidencia { Id = 3, Nombre = "Operador" },
             new TipoIncidencia { Id = 4, Nombre = "Cliente" },
             new TipoIncidencia { Id = 5, Nombre = "Otro" });
+
+        // Los roles son parte del sistema (no datos de ejemplo). El ConcurrencyStamp es fijo
+        // porque HasData necesita valores que no cambien entre una migración y otra.
+        builder.Entity<IdentityRole<int>>().HasData(
+            Security.Roles.Todos.Select((rol, i) => new IdentityRole<int>
+            {
+                Id = i + 1,
+                Name = rol,
+                NormalizedName = rol.ToUpperInvariant(),
+                ConcurrencyStamp = $"rol-{i + 1}"
+            }));
     }
 }
