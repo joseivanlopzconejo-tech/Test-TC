@@ -7,7 +7,7 @@ PUERTO=5178
 
 # ¿Ya hay algo escuchando en el puerto? Se revisa el PUERTO y no el nombre del proceso, porque
 # la extensión de C# del editor también tiene procesos con el nombre del proyecto.
-if (exec 3<>"/dev/tcp/127.0.0.1/$PUERTO") 2>/dev/null; then
+if (exec 3<>"/dev/tcp/127.0.0.1/$PUERTO") 2>/dev/null || (exec 3<>"/dev/tcp/::1/$PUERTO") 2>/dev/null; then
   echo "La app ya está corriendo en el puerto $PUERTO."
   exit 0
 fi
@@ -20,8 +20,13 @@ for _ in $(seq 1 60); do
   sleep 2
 done
 
+# "http://*" escucha en IPv4 e IPv6: el reenvío de puertos de Codespaces puede conectarse por
+# cualquiera de los dos (con solo 0.0.0.0, una conexión a ::1 da error 502).
 # setsid + nohup: la app queda separada de esta terminal y sigue viva cuando el script termina.
-setsid nohup dotnet run --project src/TorreControl.Web --no-launch-profile --urls "http://0.0.0.0:$PUERTO" \
+# Las variables se ponen aquí también (además de docker-compose.yml) para no depender de que la
+# terminal desde donde se ejecute las haya heredado: sin el modo proxy, cada página da error 500.
+ASPNETCORE_ENVIRONMENT=Development Proxy__DetrasDeProxyHttps=true \
+setsid nohup dotnet run --project src/TorreControl.Web --no-launch-profile --urls "http://*:$PUERTO" \
   > /tmp/torre-control.log 2>&1 < /dev/null &
 
 echo "La app está arrancando (tarda ~1 minuto la primera vez). Bitácora: /tmp/torre-control.log"
