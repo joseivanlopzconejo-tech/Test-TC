@@ -13,11 +13,15 @@
   // Cada vez que el Codespace arranca: levanta la app en segundo plano.
   "postStartCommand": "bash .devcontainer/iniciar.sh",
 
-  "forwardPorts": [5178],
+  // OJO: sin "forwardPorts" a propósito. En un Codespace con Docker Compose, un puerto que se
+  // reenvía al iniciar (antes de que la app exista) puede quedar "pegado" y dar error 502.
+  // En su lugar, GitHub detecta el puerto cuando la app ya está escuchando, y estas reglas
+  // le ponen nombre, fijan el protocolo y lo abren en el navegador.
   "portsAttributes": {
     "5178": {
       "label": "Torre de Control",
-      // Abre la app en el navegador en cuanto está lista.
+      // La app habla HTTP dentro del Codespace; GitHub pone el HTTPS hacia afuera.
+      "protocol": "http",
       "onAutoForward": "openBrowser"
     }
   },
