@@ -1,0 +1,14 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+@* Mensaje genérico a propósito: el detalle técnico solo va a los logs (nunca se le muestra al usuario). *@
+<section class="tc-tarjeta">
+    <h1 class="h4 text-danger">Ocurrió un problema</h1>
+    <p>No pudimos completar la operación. Intenta de nuevo; si sigue pasando, avisa a Sistemas.</p>
+    @if (Model.ShowRequestId)
+    {
+        <p class="mb-0 small text-body-secondary">Folio para soporte: <code>@Model.RequestId</code></p>
+    }
+</section>

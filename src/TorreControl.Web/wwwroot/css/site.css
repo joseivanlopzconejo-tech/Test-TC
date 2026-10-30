@@ -1,0 +1,39 @@
+/*
+  Estilos propios de Torre de Control.
+  Bootstrap solo da el layout base; colores y tamaños salen de estas variables
+  para poder cambiar la identidad visual (y el tema claro/oscuro) en un solo lugar.
+*/
+:root {
+  --tc-fondo: #0f141a;
+  --tc-superficie: #171e27;
+  --tc-borde: #263140;
+  --tc-texto: #e6edf3;
+  --tc-acento: #3fa7f5;
+  --tc-radio: 10px;
+}
+
+body {
+  background: var(--tc-fondo);
+  color: var(--tc-texto);
+  /* Cifras de ancho fijo: las horas y aforos quedan alineados en columnas. */
+  font-variant-numeric: tabular-nums;
+}
+
+.tc-barra {
+  background: var(--tc-superficie);
+  border-bottom: 1px solid var(--tc-borde);
+}
+
+.tc-marca {
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--tc-acento);
+}
+
+.tc-tarjeta {
+  background: var(--tc-superficie);
+  border: 1px solid var(--tc-borde);
+  border-radius: var(--tc-radio);
+  padding: 1.25rem;
+  max-width: 40rem;
+}
