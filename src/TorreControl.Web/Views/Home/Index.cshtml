@@ -45,24 +45,37 @@
     @* ---- Pestañas de planta: fijas al hacer scroll, con contador y reordenables arrastrando. ---- *@
     <nav id="tc-pestanas" class="tc-pestanas" role="tablist" aria-label="Plantas"></nav>
 
-    @* ---- Herramientas: búsqueda, filtros rápidos y columnas visibles. ---- *@
+    @* ---- Herramientas: búsqueda, filtros rápidos, densidad y columnas visibles. ---- *@
     <div class="tc-herramientas">
-        <input type="search" id="tc-buscar" class="form-control form-control-sm tc-buscar" placeholder="Buscar ruta, unidad u operador" aria-label="Buscar" />
+        <label class="tc-buscar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input type="search" id="tc-buscar" placeholder="Buscar ruta, unidad u operador" aria-label="Buscar" />
+        </label>
         <div class="tc-filtros-rapidos" role="group" aria-label="Filtros rápidos">
-            <button type="button" class="tc-filtro activo" data-filtro="todos">Todos</button>
-            <button type="button" class="tc-filtro" data-filtro="pendientes">Pendientes</button>
-            <button type="button" class="tc-filtro" data-filtro="incidencia">Con incidencia</button>
-            <button type="button" class="tc-filtro" data-filtro="trayecto">En trayecto</button>
+            <button type="button" class="tc-filtro activo" data-filtro="todos">Todos <span class="tc-cuenta" data-cuenta="todos"></span></button>
+            <button type="button" class="tc-filtro" data-filtro="pendientes">Pendientes <span class="tc-cuenta" data-cuenta="pendientes"></span></button>
+            <button type="button" class="tc-filtro" data-filtro="incidencia">Con incidencia <span class="tc-cuenta" data-cuenta="incidencia"></span></button>
+            <button type="button" class="tc-filtro" data-filtro="trayecto">En trayecto <span class="tc-cuenta" data-cuenta="trayecto"></span></button>
         </div>
-        <div class="dropdown">
-            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Columnas</button>
-            <div id="tc-menu-columnas" class="dropdown-menu dropdown-menu-end tc-menu-columnas"></div>
+        <div class="tc-herramientas-derecha">
+            <button type="button" id="tc-densidad" class="btn btn-sm tc-boton-barra" aria-pressed="false" title="Cambiar el alto de las filas">Compacto</button>
+            <div class="dropdown">
+                <button type="button" class="btn btn-sm tc-boton-barra dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Columnas</button>
+                <div id="tc-menu-columnas" class="dropdown-menu dropdown-menu-end tc-menu-columnas"></div>
+            </div>
         </div>
-        <span id="tc-estado" class="tc-estado" aria-live="polite"></span>
     </div>
 
     <div id="tc-tabla" class="tc-tabla"></div>
     <p id="tc-vacio" class="tc-vacio" hidden>No hay servicios de esta planta en la ventana elegida.</p>
+
+    @* ---- Barra de estado, como en una hoja de cálculo. ---- *@
+    <footer class="tc-barra-estado">
+        <span id="tc-resumen-tabla"></span>
+        <span id="tc-seleccion" class="tc-seleccion"></span>
+        <span class="tc-atajo">Flechas para moverte · Shift para seleccionar · Ctrl+C para copiar</span>
+        <span id="tc-estado" class="tc-estado" aria-live="polite"></span>
+    </footer>
 </div>
 
 @* Ficha del operador (se abre con el ícono "i"). *@

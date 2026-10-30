@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TorreControl.Web.Models;
 using TorreControl.Web.Security;
 using TorreControl.Web.Services;
@@ -22,6 +23,7 @@ public class DatosEjemplo(
     ReglasTurno turnos,
     CalculadoraFiltros filtros,
     RelojNegocio reloj,
+    IOptions<ReglasNegocioOptions> reglas,
     IConfiguration config,
     ILogger<DatosEjemplo> logger)
 {
@@ -56,6 +58,29 @@ public class DatosEjemplo(
     [
         "Raúl Ibarra", "Martín Cisneros", "Jorge Valdés", "Sergio Robles", "Hugo Navarro", "Iván Duarte",
         "Óscar Lara", "Felipe Arriaga", "Ramón Tapia", "Emilio Paredes", "Diego Quiroz", "Javier Solís"
+    ];
+
+    // Ids fijos de los catálogos que vienen en la migración.
+    private const int Apagada = 1, Trayecto = 2, Finalizado = 3;
+
+    // Minutos de diferencia simulados: la mayoría a tiempo, algunos tarde y pocos muy tarde.
+    private static readonly int[] Diferencias = [-4, -2, -1, 0, 0, 1, 2, 3, 4, 5, 6, 8, 9, 12, 16, 24];
+
+    private static readonly (int TipoId, string Tipo, string Motivo)[] Motivos =
+    [
+        (1, "Tráfico", "carga vehicular en el acceso a la autopista"),
+        (1, "Tráfico", "cierre parcial por obra en el bulevar"),
+        (2, "Falla mecánica", "revisión de frenos antes de salir"),
+        (3, "Operador", "relevo de operador en la base"),
+        (4, "Cliente", "la planta retrasó la salida del personal")
+    ];
+
+    private static readonly string[] ObservacionesFiltro =
+    [
+        "Operador confirma unidad en base.",
+        "Unidad lista para salir.",
+        "Operador en camino al primer punto.",
+        "Sin respuesta del operador, se reintenta."
     ];
 
     private static readonly (string Numero, string Nombre, string Rol, int? Modulo)[] UsuariosDemo =
@@ -183,6 +208,10 @@ public class DatosEjemplo(
         var unidades = await db.Unidades.OrderBy(u => u.Id).Select(u => u.Id).ToListAsync();
         var operadores = await db.Operadores.OrderBy(o => o.Id).Select(o => o.Id).ToListAsync();
         var horaTurnoPorPlanta = Plantas.ToDictionary(p => p.Planta, p => p.HoraTurno);
+        var capturista = (await usuarios.FindByNameAsync("900005"))?.Id;
+        var ahora = reloj.Ahora();
+        // Semilla fija por día: los datos simulados salen iguales cada vez que se regeneran.
+        var azar = new Random(dia.DayNumber);
         var contador = 0;
 
         foreach (var ruta in rutas)
@@ -215,6 +244,7 @@ public class DatosEjemplo(
                         .ToList();
                 }
 
+                SimularCapturas(servicio, ahora, azar, capturista, unidades, contador);
                 db.Servicios.Add(servicio);
                 contador++;
             }
@@ -222,5 +252,93 @@ public class DatosEjemplo(
 
         await db.SaveChangesAsync();
         logger.LogInformation("Datos de ejemplo: {Cantidad} servicios creados para el {Dia}.", contador, dia);
+    }
+
+    /// <summary>
+    /// Simula lo que un monitorista habría capturado en los servicios que ya pasaron, para que la
+    /// tabla de ejemplo se vea como un turno real y no todo "Sin acción". Solo datos de ejemplo:
+    /// las capturas reales pasarán por las reglas de negocio de la Fase 2.
+    /// </summary>
+    private void SimularCapturas(Servicio s, DateTime ahora, Random azar, int? capturista, List<int> unidades, int indice)
+    {
+        var (salida, llegada) = ReglasTurno.Intervalo(s.Fecha, s.Hip, s.Htp);
+
+        // Filtros ya vencidos: casi todos capturados; uno de cada ocho quedó "Sin acción".
+        foreach (var filtro in s.Filtros.Where(f => f.HoraProgramada <= ahora))
+        {
+            if (azar.Next(8) == 0)
+            {
+                continue;
+            }
+
+            var estatus = filtro.NumeroFiltro <= 2 ? Apagada : Trayecto;
+            var observacion = ObservacionesFiltro[azar.Next(ObservacionesFiltro.Length)];
+            var capturadoEn = filtro.HoraProgramada.AddMinutes(-azar.Next(1, 12));
+
+            // El Filtro 4 se captura como "modificaciones" (necesitan un usuario que las firme).
+            if (filtro.NumeroFiltro == CalculadoraFiltros.TotalFiltros && capturista is { } id)
+            {
+                filtro.Modificaciones.Add(new Modificacion { NumeroModificacion = 1, EstatusId = estatus, Observacion = observacion, CapturadoEn = capturadoEn, CapturadoPorId = id });
+                if (azar.Next(3) == 0)
+                {
+                    filtro.Modificaciones.Add(new Modificacion { NumeroModificacion = 2, EstatusId = Trayecto, Observacion = "Unidad saliendo de la base.", CapturadoEn = capturadoEn.AddMinutes(4), CapturadoPorId = id });
+                }
+            }
+            else
+            {
+                filtro.EstatusId = estatus;
+                filtro.Observacion = observacion;
+                filtro.CapturadoEn = capturadoEn;
+                filtro.CapturadoPorId = capturista;
+            }
+        }
+
+        // De vez en cuando, una unidad de apoyo.
+        if (indice % 11 == 3)
+        {
+            s.UnidadesApoyo.Add(new UnidadApoyo { UnidadId = unidades[(indice + 17) % unidades.Count], Orden = 1 });
+        }
+
+        if (salida > ahora)
+        {
+            return;
+        }
+
+        var retrasoInicio = Diferencias[azar.Next(Diferencias.Length)];
+        s.Hir = salida.AddMinutes(retrasoInicio);
+        s.HirModificaciones = 1;
+        s.EstatusId = Trayecto;
+        s.Incidencias.Add(Incidencia(MomentoIncidencia.Inicio, retrasoInicio, azar));
+
+        if (llegada > ahora)
+        {
+            return;
+        }
+
+        var retrasoLlegada = Diferencias[azar.Next(Diferencias.Length)];
+        s.Htr = llegada.AddMinutes(retrasoLlegada);
+        s.HtrModificaciones = 1;
+        s.EstatusId = Finalizado;
+        s.Aforo = azar.Next(18, 46);
+        s.Incidencias.Add(Incidencia(MomentoIncidencia.Llegada, retrasoLlegada, azar));
+    }
+
+    private Incidencia Incidencia(MomentoIncidencia momento, int minutos, Random azar)
+    {
+        // Misma escalera de tolerancia que la regla real: dentro de tolerancia (o un adelanto
+        // pequeño) = "sin novedad"; si no, incidencia con tipo y motivo.
+        if (minutos <= reglas.Value.ToleranciaMin)
+        {
+            return new Incidencia { Momento = momento, EsSinNovedad = true, Texto = TextosIncidencia.SinNovedad(momento) };
+        }
+
+        var (tipoId, tipo, motivo) = Motivos[azar.Next(Motivos.Length)];
+        return new Incidencia
+        {
+            Momento = momento,
+            TipoIncidenciaId = tipoId,
+            Motivo = motivo,
+            Texto = TextosIncidencia.ConIncidente(momento, tarde: minutos > 0, tipo, motivo)
+        };
     }
 }

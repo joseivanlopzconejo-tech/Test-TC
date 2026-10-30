@@ -1,6 +1,8 @@
 /*
   Pantalla de monitoreo: la tabla donde el monitorista pasa 8 horas.
-  Debe verse como una hoja de cálculo mejorada: densa pero legible, con estados por color.
+  Idea de diseño: una hoja de cálculo moderna (cuadrícula, números de fila, celda activa,
+  barra de estado) pero sin el aspecto "de oficina": líneas muy tenues, tipografía cuidada,
+  color solo donde comunica algo (estatus, retrasos, MIXTO, incidencias).
 */
 
 .tc-monitoreo {
@@ -15,8 +17,8 @@
   align-items: center;
   flex-wrap: wrap;
   gap: .5rem 1rem;
-  padding: .4rem 1rem;
-  background: var(--tc-superficie-2);
+  padding: .45rem 1rem;
+  background: var(--tc-superficie);
   border-bottom: 1px solid var(--tc-borde);
 }
 
@@ -34,15 +36,19 @@
 .tc-campo {
   display: flex;
   flex-direction: column;
-  gap: .15rem;
-  font-size: .75rem;
-  color: var(--tc-texto-suave);
+  gap: .2rem;
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--tc-texto-tenue);
 }
 
 .tc-campo .form-control {
-  background: var(--tc-superficie);
+  background: var(--tc-superficie-2);
   color: var(--tc-texto);
   border-color: var(--tc-borde);
+  font-size: .85rem;
 }
 
 .tc-hora {
@@ -62,24 +68,22 @@
   color: var(--tc-alerta);
 }
 
-.tc-error-ventana:empty {
-  display: none;
-}
+.tc-error-ventana:empty { display: none; }
 
 .tc-ventana-resumen {
   display: flex;
   align-items: center;
-  gap: .6rem;
-  font-size: .9rem;
+  gap: .65rem;
+  font-size: .85rem;
 }
 
 .tc-chip-turno {
-  padding: .1rem .55rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--tc-acento) 18%, transparent);
+  padding: .12rem .55rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--tc-acento) 15%, transparent);
   color: var(--tc-acento);
-  font-weight: 700;
-  font-size: .8rem;
+  font-weight: 650;
+  font-size: .78rem;
   white-space: nowrap;
 }
 
@@ -88,11 +92,21 @@
   white-space: nowrap;
 }
 
+#tc-cambiar-ventana {
+  font-size: .8rem;
+  color: var(--tc-texto-suave);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--tc-texto-tenue);
+  border-radius: 0;
+}
+
+#tc-cambiar-ventana:hover { color: var(--tc-acento); border-bottom-color: var(--tc-acento); }
+
 .tc-reloj {
   margin-left: auto;
-  font-size: .95rem;
+  font-size: .9rem;
   font-weight: 600;
-  letter-spacing: .05em;
+  letter-spacing: .06em;
   color: var(--tc-texto-suave);
 }
 
@@ -102,61 +116,73 @@
   top: 0;
   z-index: 20;
   display: flex;
-  gap: .25rem;
-  padding: .35rem .75rem 0;
+  gap: .15rem;
+  padding: 0 .75rem;
   overflow-x: auto;
   scrollbar-width: thin;
-  background: var(--tc-fondo);
+  background: var(--tc-superficie);
   border-bottom: 1px solid var(--tc-borde);
 }
 
 .tc-pestana {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: .45rem;
-  padding: .35rem .75rem;
-  border: 1px solid transparent;
-  border-bottom: none;
-  border-radius: 8px 8px 0 0;
+  gap: .5rem;
+  padding: .6rem .8rem .55rem;
+  border: none;
   background: transparent;
   color: var(--tc-texto-suave);
-  font-size: .88rem;
+  font-size: .85rem;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
 }
 
-.tc-pestana:hover {
-  color: var(--tc-texto);
-  background: var(--tc-superficie-2);
-}
+.tc-pestana:hover { color: var(--tc-texto); }
 
 .tc-pestana[aria-selected="true"] {
   color: var(--tc-texto);
-  background: var(--tc-superficie);
-  border-color: var(--tc-borde);
-  box-shadow: inset 0 2px 0 var(--tc-acento);
-  margin-bottom: -1px;
+  font-weight: 600;
+}
+
+/* Subrayado de la pestaña activa. */
+.tc-pestana[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  left: .6rem;
+  right: .6rem;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--tc-acento);
 }
 
 .tc-pestana .tc-cliente {
   font-size: .72rem;
-  color: var(--tc-texto-suave);
+  font-weight: 400;
+  color: var(--tc-texto-tenue);
 }
 
 .tc-contador {
-  min-width: 1.6rem;
-  padding: 0 .4rem;
-  border-radius: 999px;
+  min-width: 1.5rem;
+  padding: .05rem .4rem;
+  border-radius: 6px;
   background: var(--tc-superficie-3);
-  color: var(--tc-texto);
-  font-size: .75rem;
-  font-weight: 700;
+  color: var(--tc-texto-suave);
+  font-size: .72rem;
+  font-weight: 650;
   text-align: center;
 }
 
-.tc-pestana.arrastrando { opacity: .45; }
-.tc-pestana.destino-arrastre { box-shadow: inset 3px 0 0 var(--tc-acento); }
+.tc-pestana[aria-selected="true"] .tc-contador {
+  background: color-mix(in srgb, var(--tc-acento) 18%, transparent);
+  color: var(--tc-acento);
+}
+
+.tc-pestana.arrastrando { opacity: .4; }
+.tc-pestana.destino-arrastre { box-shadow: inset 2px 0 0 var(--tc-acento); }
 
 /* ---- Herramientas ---- */
 .tc-herramientas {
@@ -164,127 +190,162 @@
   align-items: center;
   flex-wrap: wrap;
   gap: .5rem .75rem;
-  padding: .5rem 1rem;
-  background: var(--tc-superficie);
+  padding: .6rem 1rem;
 }
 
 .tc-buscar {
-  width: 16rem;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  width: 17rem;
   max-width: 100%;
-  background: var(--tc-superficie-2);
+  margin: 0;
+  padding: 0 .6rem;
+  border: 1px solid var(--tc-borde);
+  border-radius: 8px;
+  background: var(--tc-superficie);
+  color: var(--tc-texto-tenue);
+}
+
+.tc-buscar:focus-within { border-color: var(--tc-acento); }
+
+.tc-buscar svg { width: 15px; height: 15px; flex: none; }
+
+.tc-buscar input {
+  width: 100%;
+  padding: .32rem 0;
+  border: none;
+  outline: none;
+  background: transparent;
   color: var(--tc-texto);
-  border-color: var(--tc-borde);
+  font-size: .85rem;
 }
 
 .tc-filtros-rapidos {
   display: inline-flex;
+  padding: 2px;
+  gap: 2px;
   border: 1px solid var(--tc-borde);
   border-radius: 8px;
-  overflow: hidden;
+  background: var(--tc-superficie);
 }
 
 .tc-filtro {
-  padding: .25rem .65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .22rem .6rem;
   border: none;
-  border-right: 1px solid var(--tc-borde);
+  border-radius: 6px;
   background: transparent;
   color: var(--tc-texto-suave);
-  font-size: .82rem;
+  font-size: .8rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-.tc-filtro:last-child { border-right: none; }
-.tc-filtro:hover { color: var(--tc-texto); background: var(--tc-superficie-2); }
+.tc-filtro:hover { color: var(--tc-texto); }
 
 .tc-filtro.activo {
-  background: color-mix(in srgb, var(--tc-acento) 20%, transparent);
+  background: var(--tc-superficie-3);
   color: var(--tc-texto);
-  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+}
+
+.tc-cuenta {
+  font-size: .72rem;
+  color: var(--tc-texto-tenue);
+}
+
+.tc-filtro.activo .tc-cuenta { color: var(--tc-acento); }
+
+.tc-herramientas-derecha {
+  display: flex;
+  gap: .4rem;
+  margin-left: auto;
 }
 
 .tc-menu-columnas {
   max-height: 60vh;
   overflow-y: auto;
+  padding: .35rem 0;
   background: var(--tc-superficie);
   border-color: var(--tc-borde);
+  box-shadow: var(--tc-sombra);
 }
 
 .tc-menu-columnas label {
   display: flex;
   align-items: center;
-  gap: .5rem;
-  padding: .2rem .9rem;
-  font-size: .85rem;
+  gap: .55rem;
+  padding: .25rem .9rem;
+  font-size: .83rem;
   cursor: pointer;
 }
 
-.tc-estado {
-  margin-left: auto;
-  font-size: .78rem;
-  color: var(--tc-texto-suave);
-}
-
-.tc-estado.error { color: var(--tc-alerta); }
+.tc-menu-columnas label:hover { background: var(--tc-superficie-3); }
 
 .tc-vacio {
   margin: 2rem auto;
   color: var(--tc-texto-suave);
 }
 
+/* ---- Barra de estado ---- */
+.tc-barra-estado {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .25rem 1.25rem;
+  padding: .4rem 1rem .5rem;
+  font-size: .75rem;
+  color: var(--tc-texto-tenue);
+}
+
+.tc-barra-estado strong { color: var(--tc-texto-suave); font-weight: 600; }
+.tc-seleccion:empty { display: none; }
+.tc-estado { margin-left: auto; }
+.tc-estado.error { color: var(--tc-alerta); }
+
 /* ---- Tabla (Tabulator con nuestros colores) ---- */
 .tc-tabla.tabulator {
-  margin: 0 .75rem .75rem;
+  margin: 0 1rem;
   border: 1px solid var(--tc-borde);
   border-radius: var(--tc-radio);
   background: var(--tc-superficie);
   color: var(--tc-texto);
-  font-size: .86rem;
+  font-size: .83rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
 }
 
+/* Encabezado: dos niveles (grupo y columna), letra pequeña en mayúsculas. */
 .tc-tabla .tabulator-header {
   background: var(--tc-superficie-2);
   border-bottom: 1px solid var(--tc-borde);
-  color: var(--tc-texto-suave);
-  font-weight: 600;
+  color: var(--tc-texto-tenue);
+  font-size: .68rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  text-transform: uppercase;
 }
 
 .tc-tabla .tabulator-header .tabulator-col {
   background: var(--tc-superficie-2);
-  border-right: 1px solid var(--tc-borde);
+  border-right: 1px solid var(--tc-borde-suave);
 }
 
-.tc-tabla .tabulator-header .tabulator-col:hover { background: var(--tc-superficie-3); }
+.tc-tabla .tabulator-header .tabulator-col .tabulator-col-content { padding: .5rem .55rem; }
 
-.tc-tabla .tabulator-tableholder { background: var(--tc-superficie); }
-
-.tc-tabla .tabulator-tableholder .tabulator-table {
-  background: var(--tc-superficie);
-  color: var(--tc-texto);
+.tc-tabla .tabulator-header .tabulator-col.tabulator-col-group > .tabulator-col-content {
+  padding-bottom: .3rem;
+  color: var(--tc-texto-suave);
+  text-align: center;
 }
 
-.tc-tabla .tabulator-row {
-  background: var(--tc-superficie);
-  border-bottom: 1px solid var(--tc-borde);
-  min-height: 2.25rem;
+.tc-tabla .tabulator-header .tabulator-col .tabulator-col-group-cols {
+  border-top: 1px solid var(--tc-borde-suave);
 }
 
-.tc-tabla .tabulator-row.tabulator-row-even { background: color-mix(in srgb, var(--tc-superficie-2) 55%, var(--tc-superficie)); }
-.tc-tabla .tabulator-row.tabulator-selectable:hover { background: var(--tc-superficie-3); }
-
-.tc-tabla .tabulator-row .tabulator-cell {
-  border-right: 1px solid color-mix(in srgb, var(--tc-borde) 60%, transparent);
-  padding: .4rem .5rem;
-}
-
-/* Columnas congeladas: fondo opaco para que lo que se desliza no se vea debajo. */
-.tc-tabla .tabulator-row .tabulator-cell.tabulator-frozen { background: inherit; }
-.tc-tabla .tabulator-row .tabulator-frozen.tabulator-frozen-left { border-right: 2px solid var(--tc-borde); }
-.tc-tabla .tabulator-header .tabulator-frozen.tabulator-frozen-left { border-right: 2px solid var(--tc-borde); }
-
-/* Fila con incidencia: marca roja a la izquierda. Fila MIXTA: violeta. (Va en la primera celda
-   porque las columnas congeladas tapan el fondo de la fila.) */
-.tc-tabla .tabulator-row.tc-fila-mixto .tabulator-cell:first-child { box-shadow: inset 3px 0 0 var(--tc-mixto); }
-.tc-tabla .tabulator-row.tc-fila-incidencia .tabulator-cell:first-child { box-shadow: inset 3px 0 0 var(--tc-alerta); }
-.tc-tabla .tabulator-row.tc-fila-mixto.tc-fila-incidencia .tabulator-cell:first-child { box-shadow: inset 3px 0 0 var(--tc-alerta), inset 6px 0 0 var(--tc-mixto); }
+.tc-tabla .tabulator-header .tabulator-col.tabulator-sortable:hover { background: var(--tc-superficie-3); }
 
 /* Flechas de orden discretas; solo resalta la de la columna ordenada. */
 .tc-tabla.tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort=none] .tabulator-col-content .tabulator-col-sorter .tabulator-arrow {
@@ -297,11 +358,89 @@
   border-top-color: var(--tc-acento);
 }
 
+.tc-tabla .tabulator-tableholder { background: var(--tc-superficie); }
+
+.tc-tabla .tabulator-tableholder .tabulator-table {
+  background: var(--tc-superficie);
+  color: var(--tc-texto);
+}
+
+/* Cuadrícula tenue: se intuye la hoja de cálculo sin "rayar" la pantalla. */
+.tc-tabla .tabulator-row {
+  background: var(--tc-superficie);
+  border-bottom: 1px solid var(--tc-borde-suave);
+}
+
+.tc-tabla .tabulator-row.tabulator-row-even { background: var(--tc-superficie); }
+.tc-tabla .tabulator-row:hover { background: color-mix(in srgb, var(--tc-acento) 5%, var(--tc-superficie)); }
+
+.tc-tabla .tabulator-row .tabulator-cell {
+  padding: .5rem .55rem;
+  border-right: 1px solid var(--tc-borde-suave);
+}
+
+/* Densidad compacta: más filas a la vista para turnos con muchas rutas. */
+.tc-tabla.tc-compacta .tabulator-row .tabulator-cell { padding-top: .28rem; padding-bottom: .28rem; }
+
+/* Números de fila, como en una hoja de cálculo. */
+.tc-tabla .tabulator-row .tabulator-row-header,
+.tc-tabla .tabulator-header .tabulator-row-header {
+  color: var(--tc-texto-tenue);
+  font-size: .72rem;
+  background: var(--tc-superficie-2);
+}
+
+/* Columnas congeladas: fondo opaco y una sombra suave en el borde, como al inmovilizar paneles. */
+.tc-tabla .tabulator-row .tabulator-cell.tabulator-frozen { background: inherit; }
+.tc-tabla .tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-left,
+.tc-tabla .tabulator-header .tabulator-col.tabulator-frozen.tabulator-frozen-left {
+  border-right: 1px solid var(--tc-borde);
+  box-shadow: 6px 0 8px -6px rgba(0, 0, 0, .45);
+}
+
+/* Celda activa y rango seleccionado (selección con teclado o arrastrando). */
+.tc-tabla .tabulator-range-overlay .tabulator-range {
+  border: 1px solid var(--tc-acento);
+  background: color-mix(in srgb, var(--tc-acento) 9%, transparent);
+}
+
+.tc-tabla .tabulator-range-overlay .tabulator-range.tabulator-range-active::after {
+  background-color: var(--tc-acento);
+}
+
+.tc-tabla .tabulator-range-overlay .tabulator-range-cell-active {
+  border: 2px solid var(--tc-acento);
+  border-radius: 2px;
+}
+
+.tc-tabla .tabulator-header .tabulator-col.tabulator-range-highlight,
+.tc-tabla .tabulator-row .tabulator-row-header.tabulator-range-highlight {
+  background: color-mix(in srgb, var(--tc-acento) 14%, var(--tc-superficie-2));
+  color: var(--tc-texto);
+}
+
+.tc-tabla .tabulator-header .tabulator-col.tabulator-range-selected,
+.tc-tabla .tabulator-row .tabulator-row-header.tabulator-range-selected {
+  background: color-mix(in srgb, var(--tc-acento) 28%, var(--tc-superficie-2));
+  color: var(--tc-texto);
+}
+
+/* Fila MIXTA: franja violeta en el número de fila. Con incidencia: franja roja. */
+.tc-tabla .tabulator-row.tc-fila-mixto .tabulator-row-header { box-shadow: inset 3px 0 0 var(--tc-mixto); }
+.tc-tabla .tabulator-row.tc-fila-incidencia .tabulator-row-header { box-shadow: inset 3px 0 0 var(--tc-alerta); }
+.tc-tabla .tabulator-row.tc-fila-mixto.tc-fila-incidencia .tabulator-row-header { box-shadow: inset 3px 0 0 var(--tc-alerta), inset 6px 0 0 var(--tc-mixto); }
+
+.tc-tabla .tabulator-placeholder .tabulator-placeholder-contents {
+  color: var(--tc-texto-tenue);
+  font-size: .9rem;
+  font-weight: 500;
+}
+
 /* ---- Contenido de celdas ---- */
 .tc-ruta {
   display: flex;
   align-items: center;
-  gap: .4rem;
+  gap: .45rem;
   min-width: 0;
 }
 
@@ -313,66 +452,83 @@
 
 .tc-tipo {
   flex: none;
-  width: 1.35rem;
-  height: 1.35rem;
-  border-radius: 5px;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 4px;
   display: inline-grid;
   place-items: center;
-  font-size: .72rem;
-  font-weight: 800;
+  font-size: .66rem;
+  font-weight: 750;
 }
 
-.tc-tipo-E { background: color-mix(in srgb, var(--tc-acento) 22%, transparent); color: var(--tc-acento); }
-.tc-tipo-S { background: color-mix(in srgb, var(--tc-ok) 22%, transparent); color: var(--tc-ok); }
+.tc-tipo-E { background: color-mix(in srgb, var(--tc-acento) 16%, transparent); color: var(--tc-acento); }
+.tc-tipo-S { background: color-mix(in srgb, var(--tc-ok) 16%, transparent); color: var(--tc-ok); }
 
 .tc-etiqueta {
   flex: none;
-  padding: 0 .35rem;
+  padding: .05rem .35rem;
   border-radius: 4px;
-  font-size: .66rem;
-  font-weight: 800;
-  letter-spacing: .04em;
+  font-size: .62rem;
+  font-weight: 750;
+  letter-spacing: .05em;
 }
 
-.tc-etiqueta-mixto { background: color-mix(in srgb, var(--tc-mixto) 22%, transparent); color: var(--tc-mixto); }
-.tc-etiqueta-medianoche { background: var(--tc-superficie-3); color: var(--tc-texto-suave); }
+/* MIXTO destacado: sólido, para que se distinga de un vistazo. */
+.tc-etiqueta-mixto { background: var(--tc-mixto); color: #fff; }
+.tc-etiqueta-medianoche { border: 1px solid var(--tc-borde); color: var(--tc-texto-suave); }
 
+/* Chip de estatus: tinte suave del color del estatus (lo pone el JS en --chip). Se adapta solo
+   a tema claro u oscuro mezclando el color con el del texto. */
 .tc-chip {
+  --chip: var(--tc-sin-accion);
   display: inline-flex;
   align-items: center;
-  gap: .3rem;
+  gap: .38rem;
   max-width: 100%;
-  padding: .1rem .55rem;
-  border-radius: 999px;
-  font-size: .78rem;
-  font-weight: 700;
-  line-height: 1.4;
+  padding: .12rem .5rem .12rem .42rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--chip) 15%, transparent);
+  color: color-mix(in srgb, var(--chip) 70%, var(--tc-texto));
+  font-size: .76rem;
+  font-weight: 600;
+  line-height: 1.35;
   white-space: nowrap;
 }
 
-.tc-chip-vacio {
-  background: var(--tc-sin-accion);
-  color: #e9edf1;
-  font-weight: 600;
+.tc-chip::before {
+  content: "";
+  flex: none;
+  width: .45rem;
+  height: .45rem;
+  border-radius: 50%;
+  background: var(--chip);
 }
 
-.tc-unidad {
-  font-weight: 700;
+/* "Sin acción": neutro, con contorno punteado (es la ausencia de dato, no un estado). */
+.tc-chip-vacio {
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--tc-sin-accion) 60%, transparent);
+  color: var(--tc-texto-tenue);
+  font-weight: 500;
 }
+
+.tc-chip-vacio::before { background: transparent; border: 1px solid var(--tc-sin-accion); }
+
+.tc-unidad { font-weight: 650; }
 
 .tc-apoyos {
   margin-left: .35rem;
-  padding: 0 .35rem;
+  padding: 0 .3rem;
   border-radius: 4px;
   background: var(--tc-superficie-3);
   color: var(--tc-texto-suave);
-  font-size: .72rem;
-  font-weight: 700;
+  font-size: .7rem;
+  font-weight: 650;
 }
 
-.tc-nulo { color: var(--tc-texto-suave); opacity: .6; }
+.tc-nulo { color: var(--tc-texto-tenue); opacity: .55; }
 
-.tc-dif { font-weight: 700; }
+.tc-dif { font-weight: 650; }
 .tc-dif-ok { color: var(--tc-ok); }
 .tc-dif-aviso { color: var(--tc-aviso); }
 .tc-dif-alerta { color: var(--tc-alerta); }
@@ -380,18 +536,18 @@
 .tc-filtro-celda {
   display: inline-flex;
   align-items: center;
-  gap: .35rem;
+  gap: .3rem;
 }
 
 .tc-mods {
-  font-size: .7rem;
-  color: var(--tc-texto-suave);
+  font-size: .68rem;
+  color: var(--tc-texto-tenue);
 }
 
 .tc-operador {
   display: flex;
   align-items: center;
-  gap: .35rem;
+  gap: .4rem;
   min-width: 0;
 }
 
@@ -402,15 +558,16 @@
 
 .tc-boton-info {
   flex: none;
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.2rem;
+  height: 1.2rem;
   padding: 0;
   border: 1px solid var(--tc-borde);
   border-radius: 50%;
   background: transparent;
-  color: var(--tc-texto-suave);
-  font-size: .72rem;
-  font-weight: 800;
+  color: var(--tc-texto-tenue);
+  font-family: Georgia, serif;
+  font-size: .7rem;
+  font-weight: 700;
   font-style: italic;
   line-height: 1;
 }
@@ -429,13 +586,13 @@
 .tc-ficha {
   position: fixed;
   z-index: 1070;
-  min-width: 14rem;
-  padding: .6rem .8rem;
+  min-width: 15rem;
+  padding: .75rem .9rem;
   background: var(--tc-superficie);
   border: 1px solid var(--tc-borde);
   border-radius: var(--tc-radio);
   box-shadow: var(--tc-sombra);
-  font-size: .85rem;
+  font-size: .83rem;
 }
 
 .tc-ficha[hidden] { display: none; }
@@ -443,22 +600,31 @@
 .tc-ficha dl {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: .15rem .75rem;
+  gap: .3rem .9rem;
   margin: 0;
 }
 
-.tc-ficha dt { color: var(--tc-texto-suave); font-weight: 500; }
+.tc-ficha dt {
+  color: var(--tc-texto-tenue);
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  align-self: center;
+}
+
 .tc-ficha dd { margin: 0; }
 
 /* ---- Ventana a media pantalla (dos ventanas lado a lado) ---- */
 @media (max-width: 1000px) {
-  .tc-herramientas { padding: .4rem .75rem; }
-  .tc-buscar { width: 11rem; }
-  .tc-estado { flex-basis: 100%; margin-left: 0; }
-  .tc-tabla.tabulator { margin: 0 .4rem .4rem; }
+  .tc-herramientas { padding: .5rem .6rem; }
+  .tc-buscar { width: 12rem; }
+  .tc-tabla.tabulator { margin: 0 .5rem; }
+  .tc-atajo { display: none; }
 }
 
 @media (max-width: 640px) {
   .tc-pestana .tc-cliente { display: none; }
   .tc-filtros-rapidos { overflow-x: auto; max-width: 100%; }
+  .tc-herramientas-derecha { margin-left: 0; }
 }

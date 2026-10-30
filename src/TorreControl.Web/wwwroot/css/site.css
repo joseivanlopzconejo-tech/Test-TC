@@ -4,52 +4,81 @@
   la identidad visual (y el tema claro/oscuro) en un solo lugar.
 */
 
-/* ---- Tema oscuro (por defecto) ---- */
+/* Tipografía: Inter (licencia OFL), servida desde la propia app. Variable: un solo archivo
+   cubre todos los grosores. Tiene números tabulares, ideales para columnas de horas. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../lib/inter/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("../lib/inter/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ---- Tema oscuro (por defecto): pizarra azulada, poco contraste en lo secundario
+   y mucho en los datos, para 8 horas de trabajo nocturno sin cansar la vista. ---- */
 :root,
 :root[data-bs-theme="dark"] {
-  --tc-fondo: #0e1319;
-  --tc-superficie: #161d26;
-  --tc-superficie-2: #1c2530;
-  --tc-superficie-3: #232e3b;
-  --tc-borde: #2a3646;
-  --tc-texto: #e6edf3;
-  --tc-texto-suave: #9fadbb;
-  --tc-acento: #4aaef7;
-  --tc-acento-texto: #06223a;
-  --tc-ok: #3fbf7f;
-  --tc-aviso: #f0b429;
-  --tc-alerta: #f2665c;
-  --tc-sin-accion: #3b4552;
-  --tc-mixto: #b48cff;
-  --tc-sombra: 0 8px 28px rgba(0, 0, 0, .45);
+  --tc-fondo: #0b0f14;
+  --tc-superficie: #10151c;
+  --tc-superficie-2: #151b23;
+  --tc-superficie-3: #1b232e;
+  --tc-borde: #232c38;
+  --tc-borde-suave: #19212b;
+  --tc-texto: #e6ebf1;
+  --tc-texto-suave: #8a97a7;
+  --tc-texto-tenue: #5d6978;
+  --tc-acento: #3d9bff;
+  --tc-acento-texto: #04172b;
+  --tc-ok: #3ccf8e;
+  --tc-aviso: #f5b83d;
+  --tc-alerta: #ff6b61;
+  --tc-sin-accion: #6b7686;
+  --tc-mixto: #a78bfa;
+  --tc-sombra: 0 10px 30px rgba(0, 0, 0, .5);
   --tc-radio: 10px;
   --bs-body-bg: var(--tc-fondo);
   --bs-body-color: var(--tc-texto);
   --bs-border-color: var(--tc-borde);
   --bs-secondary-color: var(--tc-texto-suave);
+  --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
 }
 
 /* ---- Tema claro ---- */
 :root[data-bs-theme="light"] {
-  --tc-fondo: #f3f5f8;
+  --tc-fondo: #f5f7fa;
   --tc-superficie: #ffffff;
-  --tc-superficie-2: #eef2f6;
-  --tc-superficie-3: #e3e9ef;
-  --tc-borde: #d3dbe3;
-  --tc-texto: #18212c;
-  --tc-texto-suave: #556270;
-  --tc-acento: #0b6fc2;
+  --tc-superficie-2: #f8fafc;
+  --tc-superficie-3: #eef2f7;
+  --tc-borde: #e1e6ed;
+  --tc-borde-suave: #edf0f5;
+  --tc-texto: #111827;
+  --tc-texto-suave: #5b6573;
+  --tc-texto-tenue: #8d96a3;
+  --tc-acento: #1769e0;
   --tc-acento-texto: #ffffff;
-  --tc-ok: #1e8a55;
-  --tc-aviso: #a86b00;
-  --tc-alerta: #c4392f;
-  --tc-sin-accion: #69737f;
-  --tc-mixto: #7041d6;
-  --tc-sombra: 0 8px 24px rgba(20, 30, 45, .14);
+  --tc-ok: #13895a;
+  --tc-aviso: #b26a00;
+  --tc-alerta: #d43c31;
+  --tc-sin-accion: #7b8594;
+  --tc-mixto: #6d43d9;
+  --tc-sombra: 0 10px 28px rgba(17, 24, 39, .12);
   --bs-body-bg: var(--tc-fondo);
   --bs-body-color: var(--tc-texto);
   --bs-border-color: var(--tc-borde);
   --bs-secondary-color: var(--tc-texto-suave);
+  --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
 }
 
 html,
@@ -59,8 +88,12 @@ body {
 }
 
 body {
+  font-family: var(--bs-body-font-family);
+  font-size: 14px;
   /* Cifras de ancho fijo: las horas y aforos quedan alineados en columnas. */
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "cv11";
+  -webkit-font-smoothing: antialiased;
 }
 
 .tc-barra {
@@ -69,13 +102,39 @@ body {
 }
 
 .tc-marca {
-  font-weight: 700;
-  letter-spacing: .02em;
-  color: var(--tc-acento);
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: .95rem;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  color: var(--tc-texto);
 }
 
 .tc-marca:hover {
+  color: var(--tc-texto);
+}
+
+.tc-marca svg {
+  width: 22px;
+  height: 22px;
   color: var(--tc-acento);
+}
+
+.tc-marca small {
+  font-weight: 500;
+  color: var(--tc-texto-tenue);
+}
+
+.tc-boton-barra {
+  --bs-btn-padding-y: .2rem;
+  --bs-btn-padding-x: .55rem;
+  --bs-btn-font-size: .8rem;
+  --bs-btn-color: var(--tc-texto-suave);
+  --bs-btn-border-color: var(--tc-borde);
+  --bs-btn-hover-bg: var(--tc-superficie-3);
+  --bs-btn-hover-color: var(--tc-texto);
+  --bs-btn-hover-border-color: var(--tc-borde);
 }
 
 .tc-tarjeta {
