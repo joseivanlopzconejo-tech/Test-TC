@@ -22,6 +22,11 @@ builder.Services.AddOptions<ReglasNegocioOptions>()
 // para que las pruebas puedan "congelar" la hora.
 builder.Services.AddSingleton(TimeProvider.System);
 
+// Reglas puras: no guardan estado, así que una sola instancia sirve para toda la app.
+builder.Services.AddSingleton<RelojNegocio>();
+builder.Services.AddSingleton<ReglasTurno>();
+builder.Services.AddSingleton<CalculadoraFiltros>();
+
 // ---- Base de datos ----
 // La cadena de conexión NUNCA va en appsettings.json (que sí está en Git): se guarda con
 // "dotnet user-secrets" en desarrollo o en variables de entorno en un servidor.

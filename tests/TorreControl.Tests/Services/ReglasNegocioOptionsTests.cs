@@ -1,22 +1,11 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.Configuration;
 using TorreControl.Web.Services;
 
 namespace TorreControl.Tests.Services;
 
 public class ReglasNegocioOptionsTests
 {
-    // Lee la sección "ReglasNegocio" del appsettings.json real de la app.
-    private static ReglasNegocioOptions LeerConfiguracionReal()
-    {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false)
-            .Build();
-
-        return config.GetSection(ReglasNegocioOptions.Seccion).Get<ReglasNegocioOptions>()
-            ?? throw new InvalidOperationException("Falta la sección ReglasNegocio.");
-    }
+    private static ReglasNegocioOptions LeerConfiguracionReal() => Configuracion.ReglasReales();
 
     // Mismo validador que usa la app al arrancar (DataAnnotations + IValidatableObject).
     private static List<ValidationResult> Validar(ReglasNegocioOptions opciones)
