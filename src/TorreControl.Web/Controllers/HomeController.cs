@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TorreControl.Web.Models;
 
@@ -11,6 +12,8 @@ public class HomeController : Controller
         return View();
     }
 
+    // La página de error debe verse aunque la sesión haya expirado.
+    [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

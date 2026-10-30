@@ -13,10 +13,13 @@ public class CabecerasSeguridadTests(FabricaApp fabrica) : IClassFixture<Fabrica
         AllowAutoRedirect = false
     });
 
+    // Página pública (no exige sesión) que usa el layout completo.
+    private const string PaginaPublica = "/Home/Error";
+
     [Fact]
     public async Task Inicio_EnviaCabecerasDeSeguridad()
     {
-        var respuesta = await Cliente().GetAsync("/");
+        var respuesta = await Cliente().GetAsync(PaginaPublica);
 
         Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
         var csp = Assert.Single(respuesta.Headers.GetValues("Content-Security-Policy"));
@@ -32,7 +35,7 @@ public class CabecerasSeguridadTests(FabricaApp fabrica) : IClassFixture<Fabrica
     [Fact]
     public async Task Produccion_NoPermiteWebSocketsDeDesarrolloEnCsp()
     {
-        var respuesta = await Cliente().GetAsync("/");
+        var respuesta = await Cliente().GetAsync(PaginaPublica);
 
         var csp = Assert.Single(respuesta.Headers.GetValues("Content-Security-Policy"));
         Assert.DoesNotContain("ws://", csp);
@@ -41,7 +44,7 @@ public class CabecerasSeguridadTests(FabricaApp fabrica) : IClassFixture<Fabrica
     [Fact]
     public async Task Https_EnviaHsts()
     {
-        var respuesta = await Cliente().GetAsync("/");
+        var respuesta = await Cliente().GetAsync(PaginaPublica);
 
         var hsts = Assert.Single(respuesta.Headers.GetValues("Strict-Transport-Security"));
         Assert.Contains("max-age=31536000", hsts); // 365 días
@@ -50,7 +53,7 @@ public class CabecerasSeguridadTests(FabricaApp fabrica) : IClassFixture<Fabrica
     [Fact]
     public async Task Http_RedirigeAHttps()
     {
-        var respuesta = await Cliente("http").GetAsync("/");
+        var respuesta = await Cliente("http").GetAsync(PaginaPublica);
 
         Assert.Equal(HttpStatusCode.TemporaryRedirect, respuesta.StatusCode);
         Assert.Equal("https", respuesta.Headers.Location?.Scheme);
@@ -59,7 +62,7 @@ public class CabecerasSeguridadTests(FabricaApp fabrica) : IClassFixture<Fabrica
     [Fact]
     public async Task CookieAntiforgery_EsHttpOnlySecureYSameSiteStrict()
     {
-        var respuesta = await Cliente().GetAsync("/");
+        var respuesta = await Cliente().GetAsync(PaginaPublica);
 
         var cookie = Assert.Single(respuesta.Headers.GetValues("Set-Cookie"), c => c.StartsWith("TorreControl.Antiforgery="));
         Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);
@@ -70,7 +73,7 @@ public class CabecerasSeguridadTests(FabricaApp fabrica) : IClassFixture<Fabrica
     [Fact]
     public async Task Respuesta_NoRevelaElServidor()
     {
-        var respuesta = await Cliente().GetAsync("/");
+        var respuesta = await Cliente().GetAsync(PaginaPublica);
 
         Assert.False(respuesta.Headers.Contains("Server"));
     }

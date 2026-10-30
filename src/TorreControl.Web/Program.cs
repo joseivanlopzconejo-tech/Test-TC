@@ -40,6 +40,10 @@ builder.Services.AddDbContext<AppDbContext>(opciones => opciones.UseSqlServer(ca
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioActual, UsuarioActualHttp>();
 
+// ---- Permisos ----
+builder.Services.AddAuthorization(Politicas.Configurar);
+builder.Services.AddScoped<AccesoPlantas>();
+
 // ---- Identity: usuarios, contraseñas y roles ----
 builder.Services.AddIdentity<Usuario, IdentityRole<int>>(opciones =>
     {
@@ -117,7 +121,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
+// CSS, JS e imágenes son públicos: la pantalla de login también los necesita.
+app.MapStaticAssets().AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",
