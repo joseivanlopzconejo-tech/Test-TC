@@ -43,6 +43,7 @@ builder.Services.AddDbContext<AppDbContext>(opciones => opciones.UseSqlServer(ca
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioActual, UsuarioActualHttp>();
 builder.Services.AddScoped<DatosEjemplo>();
+builder.Services.AddScoped<ConsultaTabla>();
 
 // ---- Permisos ----
 builder.Services.AddAuthorization(Politicas.Configurar);
