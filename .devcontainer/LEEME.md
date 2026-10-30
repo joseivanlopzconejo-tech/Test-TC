@@ -4,11 +4,17 @@ Este Codespace ya trae .NET 10, SQL Server 2022 y los datos de ejemplo. No hay q
 
 ## Abrir la app
 
-1. Espera 1 o 2 minutos la primera vez (la app se compila y carga los datos de ejemplo).
-2. Abre la pestaña **PORTS** (Puertos) de abajo y da clic en el ícono del globo 🌐 de
-   **Torre de Control (5178)**. Si apareció un aviso "Open in Browser", también sirve.
-3. Inicia sesión con un usuario demo. La contraseña está en la terminal (o escribe
-   `cat ~/.torre-control/contrasena-demo`).
+1. Abre una terminal (menú ☰ → Terminal → Nueva terminal) y escribe:
+
+   ```bash
+   bash .devcontainer/probar.sh
+   ```
+
+   Arranca la app, espera a que responda y te dice la dirección y la contraseña. Si algo
+   falla, muestra el error.
+2. Abre esa dirección en una pestaña **normal** del navegador (no en el "Explorador simple"
+   del editor). También sirve el globo 🌐 de la fila 5178 en la pestaña **Puertos**.
+3. Inicia sesión con un usuario demo.
 
 | Número | Rol | Ve |
 |---|---|---|
@@ -22,8 +28,8 @@ Este Codespace ya trae .NET 10, SQL Server 2022 y los datos de ejemplo. No hay q
 ## Comandos útiles (en la terminal)
 
 ```bash
+bash .devcontainer/probar.sh     # arrancar la app (si no corre) y revisar que responda
 tail -f /tmp/torre-control.log   # ver lo que hace la app
-bash .devcontainer/iniciar.sh    # volver a levantarla si se detuvo
 dotnet test                      # correr todas las pruebas
 ```
 
