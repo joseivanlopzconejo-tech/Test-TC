@@ -1,5 +1,6 @@
 @using TorreControl.Web.Security
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject Microsoft.Extensions.Options.IOptions<TorreControl.Web.Services.ReglasNegocioOptions> Reglas
 @{
     var conSesion = User.Identity?.IsAuthenticated == true;
     var sesionExpira = Context.Items[SesionDeslizante.ClaveExpira] as DateTimeOffset?;
@@ -16,6 +17,8 @@
     {
         @* Hora (UTC) en que vence la sesión; sesion.js avisa unos minutos antes. *@
         <meta name="sesion-expira" content="@sesionExpira.Value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ")" />
+        @* Las horas se muestran en la zona del negocio, no en la de la computadora. *@
+        <meta name="zona-horaria" content="@Reglas.Value.ZonaHoraria" />
     }
     <title>@ViewData["Title"] · Torre de Control</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />

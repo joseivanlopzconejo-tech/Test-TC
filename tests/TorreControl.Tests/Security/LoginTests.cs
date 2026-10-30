@@ -129,4 +129,21 @@ public class LoginTests(AppConBaseDatos app) : IClassFixture<AppConBaseDatos>
         var faltan = DateTimeOffset.Parse(valor) - DateTimeOffset.UtcNow;
         Assert.InRange(faltan, TimeSpan.FromHours(7.9), TimeSpan.FromHours(8));
     }
+
+    [Fact]
+    public async Task SeguirTrabajando_ContestaLaNuevaHoraDeVencimiento()
+    {
+        var navegador = app.Navegador();
+        await AppConBaseDatos.IniciarSesionAsync(navegador, AppConBaseDatos.MonitoristaA, app.Contrasena);
+        var token = await AppConBaseDatos.TokenDeFormularioAsync(navegador, "/");
+
+        var peticion = new HttpRequestMessage(HttpMethod.Post, "/Cuenta/MantenerSesion");
+        peticion.Headers.Add("RequestVerificationToken", token);
+        var respuesta = await navegador.SendAsync(peticion);
+
+        Assert.Equal(HttpStatusCode.OK, respuesta.StatusCode);
+        var json = System.Text.Json.JsonDocument.Parse(await respuesta.Content.ReadAsStringAsync());
+        var expira = json.RootElement.GetProperty("expiraUtc").GetDateTimeOffset();
+        Assert.InRange(expira - DateTimeOffset.UtcNow, TimeSpan.FromHours(7.9), TimeSpan.FromHours(8));
+    }
 }

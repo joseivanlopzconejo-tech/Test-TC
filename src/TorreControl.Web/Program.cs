@@ -41,6 +41,7 @@ builder.Services.AddDbContext<AppDbContext>(opciones => opciones.UseSqlServer(ca
 // La Auditoría necesita saber quién hace cada cambio: se lo dice la sesión de la petición web.
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUsuarioActual, UsuarioActualHttp>();
+builder.Services.AddScoped<DatosEjemplo>();
 
 // ---- Permisos ----
 builder.Services.AddAuthorization(Politicas.Configurar);
@@ -137,6 +138,13 @@ builder.Services.AddControllersWithViews(opciones =>
 });
 
 var app = builder.Build();
+
+// Solo en desarrollo: crea/actualiza la base y carga datos FICTICIOS para poder probar.
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("DatosEjemplo:Sembrar"))
+{
+    using var alcance = app.Services.CreateScope();
+    await alcance.ServiceProvider.GetRequiredService<DatosEjemplo>().SembrarAsync();
+}
 
 app.UseCabecerasSeguridad(app.Environment.IsDevelopment());
 
