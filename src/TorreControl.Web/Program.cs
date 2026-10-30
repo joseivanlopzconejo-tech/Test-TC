@@ -28,6 +28,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<RelojNegocio>();
 builder.Services.AddSingleton<ReglasTurno>();
 builder.Services.AddSingleton<CalculadoraFiltros>();
+builder.Services.AddSingleton<VentanaServicios>();
 
 // ---- Base de datos ----
 // La cadena de conexión NUNCA va en appsettings.json (que sí está en Git): se guarda con

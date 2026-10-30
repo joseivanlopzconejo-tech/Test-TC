@@ -11,6 +11,16 @@ public static class SesionDeslizante
 {
     public const string ClaveExpira = "tc:sesion-expira-utc";
 
+    /// <summary>
+    /// Cabecera que manda la tabla en sus actualizaciones automáticas (cada 30 s). Esas peticiones
+    /// NO cuentan como actividad: si nadie está frente a la pantalla, la sesión debe vencer igual.
+    /// Solo los clics y capturas reales renuevan la sesión.
+    /// </summary>
+    public const string CabeceraAutomatica = "X-Actualizacion-Automatica";
+
+    private static bool EsAutomatica(HttpContext contexto) =>
+        contexto.Request.Headers.ContainsKey(CabeceraAutomatica);
+
     public static void Configurar(CookieAuthenticationOptions opciones)
     {
         DateTimeOffset Ahora() => opciones.TimeProvider?.GetUtcNow() ?? DateTimeOffset.UtcNow;
@@ -18,6 +28,11 @@ public static class SesionDeslizante
         // 1) Revisión normal de expiración deslizante.
         opciones.Events.OnCheckSlidingExpiration = contexto =>
         {
+            if (EsAutomatica(contexto.HttpContext))
+            {
+                contexto.ShouldRenew = false;
+            }
+
             var ahora = Ahora();
             contexto.HttpContext.Items[ClaveExpira] = contexto.ShouldRenew
                 ? ahora.Add(opciones.ExpireTimeSpan)
@@ -31,7 +46,12 @@ public static class SesionDeslizante
         opciones.Events.OnValidatePrincipal = async contexto =>
         {
             await validacionIdentity(contexto);
-            if (contexto.ShouldRenew)
+            if (EsAutomatica(contexto.HttpContext))
+            {
+                // Se valida igual (usuario activo, etc.), pero sin alargar la sesión.
+                contexto.ShouldRenew = false;
+            }
+            else if (contexto.ShouldRenew)
             {
                 contexto.HttpContext.Items[ClaveExpira] = Ahora().Add(opciones.ExpireTimeSpan);
             }
