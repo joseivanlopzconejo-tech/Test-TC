@@ -27,6 +27,16 @@ fi
 
 IPV4="$(codigo 127.0.0.1)"
 IPV6="$(codigo '[::1]')"
+
+# Diagnóstico de red (para resolver un error 502 del reenvío de puertos de Codespaces).
+echo
+echo "---- Diagnóstico ----"
+echo "localhost        -> $(codigo localhost)"
+echo "IPv6 desactivado -> all=$(cat /proc/sys/net/ipv6/conf/all/disable_ipv6 2>/dev/null || echo '?') lo=$(cat /proc/sys/net/ipv6/conf/lo/disable_ipv6 2>/dev/null || echo '?')"
+echo "localhost resuelve a: $(getent ahosts localhost | awk '{print $1}' | sort -u | tr '\n' ' ')"
+echo "Escuchando en: $(grep -h "Now listening" "$BITACORA" 2>/dev/null | awk '{print $NF}' | tr '\n' ' ')"
+echo "Puertos abiertos: $( (ss -ltn 2>/dev/null || netstat -ltn 2>/dev/null) | awk '/:'"$PUERTO"'/ {print $4}' | tr '\n' ' ')"
+echo "---------------------"
 echo
 if [ "$IPV4" = "200" ]; then
   echo "✅ La app está funcionando (IPv4: $IPV4, IPv6: $IPV6)."
