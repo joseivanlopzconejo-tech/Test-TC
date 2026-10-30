@@ -8,7 +8,11 @@ public record TablaRespuesta(
     DateTime AhoraUtc,
     int TurnoActual,
     VentanaDto Ventana,
+    ReglasVistaDto Reglas,
     List<PlantaTablaDto> Plantas);
+
+// Solo para colorear las diferencias en pantalla; las decisiones (bloqueos, ventanas) las toma el servidor.
+public record ReglasVistaDto(int ToleranciaMin, int SospechosaMin);
 
 public record VentanaDto(string Dia, string Desde, string Hasta, int Turno);
 

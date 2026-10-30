@@ -1,34 +1,74 @@
-@model TorreControl.Web.Models.ViewModels.InicioViewModel
 @{
-    ViewData["Title"] = "Inicio";
+    ViewData["Title"] = "Monitoreo";
+    ViewData["PantallaCompleta"] = true;
 }
 
-@* Pantalla provisional de la Fase 1: comprueba qué plantas ve cada usuario. La tabla real llega en la Fase 2. *@
-<section class="tc-tarjeta">
-    <h1 class="h5 mb-1">Tus plantas</h1>
-    <p class="small text-body-secondary mb-3">Servicios programados para el @Model.Hoy.ToString("dd/MM/yyyy")</p>
+@section Estilos {
+    <link rel="stylesheet" href="~/lib/tabulator/css/tabulator.min.css" />
+    <link rel="stylesheet" href="~/css/monitoreo.css" asp-append-version="true" />
+}
 
-    @if (Model.Plantas.Count == 0)
-    {
-        <p class="mb-0">No tienes plantas asignadas hoy. Pide a tu supervisor que te asigne un módulo.</p>
-    }
-    else
-    {
-        <table class="table table-sm mb-0 tc-tabla-simple">
-            <thead>
-                <tr><th>Cliente</th><th>Planta</th><th>Municipio</th><th class="text-end">Servicios</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var p in Model.Plantas)
-                {
-                    <tr>
-                        <td>@p.Cliente</td>
-                        <td>@p.Planta</td>
-                        <td>@p.Municipio</td>
-                        <td class="text-end">@p.ServiciosHoy</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</section>
+<div class="tc-monitoreo">
+    @* ---- Barra de ventana: Día / Hora inicio / Hora fin / reloj. Se minimiza una vez fijada. ---- *@
+    <section id="tc-barra-ventana" class="tc-barra-ventana" data-abierta="false" aria-label="Ventana de horas">
+        <form id="tc-form-ventana" class="tc-ventana-campos" novalidate>
+            <label class="tc-campo">
+                <span>Día</span>
+                <input type="date" id="tc-dia" class="form-control form-control-sm" required />
+            </label>
+            <label class="tc-campo">
+                <span>Hora inicio</span>
+                <input type="text" id="tc-desde" class="form-control form-control-sm tc-hora" inputmode="numeric"
+                       maxlength="5" placeholder="HH:mm" autocomplete="off" required />
+            </label>
+            <label class="tc-campo">
+                <span>Hora fin</span>
+                <input type="text" id="tc-hasta" class="form-control form-control-sm tc-hora" inputmode="numeric"
+                       maxlength="5" placeholder="HH:mm" autocomplete="off" required />
+            </label>
+            <div class="tc-ventana-acciones">
+                <button type="submit" class="btn btn-sm btn-primary">Aplicar</button>
+                <button type="button" id="tc-turno-actual" class="btn btn-sm btn-outline-secondary">Turno actual</button>
+            </div>
+            <span id="tc-error-ventana" class="tc-error-ventana" role="alert"></span>
+        </form>
+
+        <div class="tc-ventana-resumen">
+            <span id="tc-chip-turno" class="tc-chip-turno">—</span>
+            <span id="tc-resumen-ventana" class="tc-resumen-ventana"></span>
+            <button type="button" id="tc-cambiar-ventana" class="btn btn-sm btn-link p-0" aria-expanded="false" aria-controls="tc-form-ventana">Cambiar</button>
+        </div>
+
+        <time id="tc-reloj" class="tc-reloj" aria-live="off" title="Hora del servidor (CDMX)">--:--:--</time>
+    </section>
+
+    @* ---- Pestañas de planta: fijas al hacer scroll, con contador y reordenables arrastrando. ---- *@
+    <nav id="tc-pestanas" class="tc-pestanas" role="tablist" aria-label="Plantas"></nav>
+
+    @* ---- Herramientas: búsqueda, filtros rápidos y columnas visibles. ---- *@
+    <div class="tc-herramientas">
+        <input type="search" id="tc-buscar" class="form-control form-control-sm tc-buscar" placeholder="Buscar ruta, unidad u operador" aria-label="Buscar" />
+        <div class="tc-filtros-rapidos" role="group" aria-label="Filtros rápidos">
+            <button type="button" class="tc-filtro activo" data-filtro="todos">Todos</button>
+            <button type="button" class="tc-filtro" data-filtro="pendientes">Pendientes</button>
+            <button type="button" class="tc-filtro" data-filtro="incidencia">Con incidencia</button>
+            <button type="button" class="tc-filtro" data-filtro="trayecto">En trayecto</button>
+        </div>
+        <div class="dropdown">
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Columnas</button>
+            <div id="tc-menu-columnas" class="dropdown-menu dropdown-menu-end tc-menu-columnas"></div>
+        </div>
+        <span id="tc-estado" class="tc-estado" aria-live="polite"></span>
+    </div>
+
+    <div id="tc-tabla" class="tc-tabla"></div>
+    <p id="tc-vacio" class="tc-vacio" hidden>No hay servicios de esta planta en la ventana elegida.</p>
+</div>
+
+@* Ficha del operador (se abre con el ícono "i"). *@
+<div id="tc-ficha-operador" class="tc-ficha" role="dialog" aria-label="Datos del operador" hidden></div>
+
+@section Scripts {
+    <script src="~/lib/tabulator/js/tabulator.min.js"></script>
+    <script type="module" src="~/js/monitoreo/principal.js" asp-append-version="true"></script>
+}

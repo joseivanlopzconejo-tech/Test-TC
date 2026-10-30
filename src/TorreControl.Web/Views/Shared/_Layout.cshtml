@@ -4,44 +4,49 @@
 @{
     var conSesion = User.Identity?.IsAuthenticated == true;
     var sesionExpira = Context.Items[SesionDeslizante.ClaveExpira] as DateTimeOffset?;
+    var pantallaCompleta = ViewData["PantallaCompleta"] is true;
 }
 <!DOCTYPE html>
-@* Tema oscuro por defecto: los monitoristas trabajan de noche (el selector claro/oscuro llega en la Fase 2). *@
+@* Tema oscuro por defecto: los monitoristas trabajan de noche. tema.js aplica el elegido antes de pintar. *@
 <html lang="es" data-bs-theme="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     @* Token CSRF para los fetch() de JavaScript; site.js lo manda en la cabecera RequestVerificationToken. *@
     <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+    @* Las horas se muestran en la zona del negocio, no en la de la computadora. *@
+    <meta name="zona-horaria" content="@Reglas.Value.ZonaHoraria" />
     @if (conSesion && sesionExpira is not null)
     {
         @* Hora (UTC) en que vence la sesión; sesion.js avisa unos minutos antes. *@
         <meta name="sesion-expira" content="@sesionExpira.Value.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ")" />
-        @* Las horas se muestran en la zona del negocio, no en la de la computadora. *@
-        <meta name="zona-horaria" content="@Reglas.Value.ZonaHoraria" />
     }
     <title>@ViewData["Title"] · Torre de Control</title>
+    @* Va en <head> y sin defer a propósito: así el tema claro/oscuro se aplica antes de dibujar (sin parpadeo). *@
+    <script src="~/js/tema.js" asp-append-version="true"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Estilos", required: false)
 </head>
 <body>
     <header class="tc-barra">
-        <nav class="navbar navbar-expand-sm">
+        <nav class="navbar navbar-expand-sm py-1">
             <div class="container-fluid">
                 <a class="navbar-brand tc-marca" asp-controller="Home" asp-action="Index">Torre de Control</a>
-                @if (conSesion)
-                {
-                    <div class="d-flex align-items-center gap-3 ms-auto">
-                        <span class="small text-body-secondary">@User.FindFirst(FabricaClaimsTorre.ClaimNombre)?.Value</span>
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <button type="button" id="tc-cambiar-tema" class="btn btn-sm btn-outline-secondary" aria-label="Cambiar a tema claro">☀</button>
+                    @if (conSesion)
+                    {
+                        <span class="small text-body-secondary d-none d-md-inline">@User.FindFirst(FabricaClaimsTorre.ClaimNombre)?.Value</span>
                         <form asp-controller="Cuenta" asp-action="Logout" method="post" class="m-0">
                             <button type="submit" class="btn btn-sm btn-outline-secondary">Cerrar sesión</button>
                         </form>
-                    </div>
-                }
+                    }
+                </div>
             </div>
         </nav>
     </header>
-    <main role="main" class="container-fluid py-3">
+    <main role="main" class="@(pantallaCompleta ? "tc-principal-completa" : "container-fluid py-3")">
         @RenderBody()
     </main>
     @* Aviso de sesión por vencer (lo muestra sesion.js). *@
@@ -49,6 +54,8 @@
         <span id="tc-aviso-sesion-texto"></span>
         <button type="button" id="tc-aviso-sesion-boton" class="btn btn-sm btn-primary">Seguir trabajando</button>
     </div>
+    @* Notificaciones breves (toasts). *@
+    <div id="tc-toasts" class="tc-toasts" aria-live="polite"></div>
     @* Sin scripts en línea: la política CSP solo permite archivos servidos por la propia app. *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

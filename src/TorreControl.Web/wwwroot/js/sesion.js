@@ -18,7 +18,7 @@
 
     const zona = document.querySelector('meta[name="zona-horaria"]')?.content;
     const horaCorta = (fecha) =>
-        fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: zona });
+        fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: zona });
 
     function programar() {
         temporizadores.forEach(clearTimeout);

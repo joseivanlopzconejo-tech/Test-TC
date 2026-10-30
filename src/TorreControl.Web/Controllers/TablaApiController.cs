@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using TorreControl.Web.Data;
 using TorreControl.Web.Models.ViewModels;
 using TorreControl.Web.Security;
@@ -15,7 +16,8 @@ public class TablaApiController(
     AccesoPlantas acceso,
     VentanaServicios ventanas,
     ReglasTurno turnos,
-    RelojNegocio reloj) : ControllerBase
+    RelojNegocio reloj,
+    IOptions<ReglasNegocioOptions> reglas) : ControllerBase
 {
     /// <param name="dia">yyyy-MM-dd (por defecto, hoy).</param>
     /// <param name="desde">HH:mm en 24 h (por defecto, inicio del turno actual).</param>
@@ -43,6 +45,7 @@ public class TablaApiController(
             reloj.AhoraUtc(),
             turnos.TurnoDe(TimeOnly.FromDateTime(ahora)),
             new VentanaDto(d.ToString("yyyy-MM-dd"), h1.ToString("HH:mm"), h2.ToString("HH:mm"), turnos.TurnoDe(h1)),
+            new ReglasVistaDto(reglas.Value.ToleranciaMin, reglas.Value.SospechosaMin),
             plantas));
     }
 

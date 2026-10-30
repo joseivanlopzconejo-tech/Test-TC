@@ -1,20 +1,64 @@
 /*
   Estilos propios de Torre de Control.
-  Bootstrap solo da el layout base; colores y tamaños salen de estas variables
-  para poder cambiar la identidad visual (y el tema claro/oscuro) en un solo lugar.
+  Bootstrap solo da el layout base; colores y tamaños salen de estas variables para cambiar
+  la identidad visual (y el tema claro/oscuro) en un solo lugar.
 */
-:root {
-  --tc-fondo: #0f141a;
-  --tc-superficie: #171e27;
-  --tc-borde: #263140;
+
+/* ---- Tema oscuro (por defecto) ---- */
+:root,
+:root[data-bs-theme="dark"] {
+  --tc-fondo: #0e1319;
+  --tc-superficie: #161d26;
+  --tc-superficie-2: #1c2530;
+  --tc-superficie-3: #232e3b;
+  --tc-borde: #2a3646;
   --tc-texto: #e6edf3;
-  --tc-acento: #3fa7f5;
+  --tc-texto-suave: #9fadbb;
+  --tc-acento: #4aaef7;
+  --tc-acento-texto: #06223a;
+  --tc-ok: #3fbf7f;
+  --tc-aviso: #f0b429;
+  --tc-alerta: #f2665c;
+  --tc-sin-accion: #3b4552;
+  --tc-mixto: #b48cff;
+  --tc-sombra: 0 8px 28px rgba(0, 0, 0, .45);
   --tc-radio: 10px;
+  --bs-body-bg: var(--tc-fondo);
+  --bs-body-color: var(--tc-texto);
+  --bs-border-color: var(--tc-borde);
+  --bs-secondary-color: var(--tc-texto-suave);
 }
 
+/* ---- Tema claro ---- */
+:root[data-bs-theme="light"] {
+  --tc-fondo: #f3f5f8;
+  --tc-superficie: #ffffff;
+  --tc-superficie-2: #eef2f6;
+  --tc-superficie-3: #e3e9ef;
+  --tc-borde: #d3dbe3;
+  --tc-texto: #18212c;
+  --tc-texto-suave: #556270;
+  --tc-acento: #0b6fc2;
+  --tc-acento-texto: #ffffff;
+  --tc-ok: #1e8a55;
+  --tc-aviso: #a86b00;
+  --tc-alerta: #c4392f;
+  --tc-sin-accion: #69737f;
+  --tc-mixto: #7041d6;
+  --tc-sombra: 0 8px 24px rgba(20, 30, 45, .14);
+  --bs-body-bg: var(--tc-fondo);
+  --bs-body-color: var(--tc-texto);
+  --bs-border-color: var(--tc-borde);
+  --bs-secondary-color: var(--tc-texto-suave);
+}
+
+html,
 body {
   background: var(--tc-fondo);
   color: var(--tc-texto);
+}
+
+body {
   /* Cifras de ancho fijo: las horas y aforos quedan alineados en columnas. */
   font-variant-numeric: tabular-nums;
 }
@@ -30,6 +74,10 @@ body {
   color: var(--tc-acento);
 }
 
+.tc-marca:hover {
+  color: var(--tc-acento);
+}
+
 .tc-tarjeta {
   background: var(--tc-superficie);
   border: 1px solid var(--tc-borde);
@@ -38,6 +86,26 @@ body {
   max-width: 40rem;
 }
 
+.tc-principal-completa {
+  padding: 0;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--tc-acento);
+  --bs-btn-border-color: var(--tc-acento);
+  --bs-btn-color: var(--tc-acento-texto);
+  --bs-btn-hover-bg: var(--tc-acento);
+  --bs-btn-hover-border-color: var(--tc-acento);
+  --bs-btn-hover-color: var(--tc-acento-texto);
+  font-weight: 600;
+}
+
+:focus-visible {
+  outline: 2px solid var(--tc-acento);
+  outline-offset: 2px;
+}
+
+/* ---- Login ---- */
 .tc-login {
   max-width: 24rem;
   margin: 8vh auto 0;
@@ -52,12 +120,13 @@ body {
   margin: 0 0 1rem;
   padding: .6rem .8rem;
   list-style: none;
-  border: 1px solid #a33;
+  border: 1px solid var(--tc-alerta);
   border-radius: 8px;
-  background: rgba(214, 69, 69, .12);
+  background: color-mix(in srgb, var(--tc-alerta) 12%, transparent);
   font-size: .9rem;
 }
 
+/* ---- Aviso de sesión y toasts ---- */
 .tc-aviso-sesion {
   position: fixed;
   right: 1rem;
@@ -69,10 +138,47 @@ body {
   background: var(--tc-superficie);
   border: 1px solid var(--tc-acento);
   border-radius: var(--tc-radio);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, .4);
+  box-shadow: var(--tc-sombra);
   z-index: 1080;
 }
 
 .tc-aviso-sesion[hidden] {
   display: none;
+}
+
+.tc-toasts {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  z-index: 1090;
+  pointer-events: none;
+}
+
+.tc-toast {
+  padding: .5rem .9rem;
+  border-radius: 8px;
+  background: var(--tc-superficie-3);
+  border-left: 4px solid var(--tc-acento);
+  box-shadow: var(--tc-sombra);
+  font-size: .9rem;
+  animation: tc-entrar .18s ease-out;
+}
+
+.tc-toast-exito { border-left-color: var(--tc-ok); }
+.tc-toast-error { border-left-color: var(--tc-alerta); }
+
+@keyframes tc-entrar {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
 }
