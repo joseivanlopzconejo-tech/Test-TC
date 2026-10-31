@@ -177,8 +177,9 @@ public class DatosEjemplo(
 
         foreach (var demo in UsuariosDemo)
         {
-            if (await usuarios.FindByNameAsync(demo.Numero) is not null)
+            if (await usuarios.FindByNameAsync(demo.Numero) is { } existente)
             {
+                await SincronizarContrasenaAsync(existente, contrasena);
                 continue;
             }
 
@@ -201,6 +202,32 @@ public class DatosEjemplo(
                 await db.SaveChangesAsync();
             }
         }
+    }
+
+    /// <summary>
+    /// En desarrollo, la contraseña de user-secrets manda. Si cambió (por ejemplo, al reconstruir un
+    /// Codespace se genera una nueva pero la base de datos se conserva), se actualiza en el usuario
+    /// demo y se le quita cualquier bloqueo por intentos fallidos. Solo corre con datos de ejemplo.
+    /// </summary>
+    private async Task SincronizarContrasenaAsync(Usuario usuario, string contrasena)
+    {
+        if (await usuarios.CheckPasswordAsync(usuario, contrasena))
+        {
+            return;
+        }
+
+        await usuarios.RemovePasswordAsync(usuario);
+        var resultado = await usuarios.AddPasswordAsync(usuario, contrasena);
+        if (!resultado.Succeeded)
+        {
+            logger.LogError("Datos de ejemplo: no se pudo actualizar la contraseña de {Numero}: {Errores}",
+                usuario.NumeroEmpleado, string.Join(" ", resultado.Errors.Select(e => e.Description)));
+            return;
+        }
+
+        await usuarios.SetLockoutEndDateAsync(usuario, null);
+        await usuarios.ResetAccessFailedCountAsync(usuario);
+        logger.LogInformation("Datos de ejemplo: contraseña de {Numero} actualizada a la de user-secrets.", usuario.NumeroEmpleado);
     }
 
     /// <summary>
