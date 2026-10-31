@@ -6,29 +6,31 @@
 # Si algo falla, muestra el error de la bitácora.
 set -uo pipefail
 
+PUERTO=5178
+
 if [ "${1:-}" = "--reiniciar-datos" ]; then
   echo "Borrando la base de datos de ejemplo (se vuelve a crear al arrancar)..."
-  pkill -f -- "--urls http" 2>/dev/null
+  pkill -f -- "--urls http.*:$PUERTO" 2>/dev/null
   sleep 2
   dotnet ef database drop -f --project src/TorreControl.Web > /dev/null
 fi
 
-PUERTO=5178
 BITACORA=/tmp/torre-control.log
 
 # Código HTTP de la página de login: 200 = la app funciona; 000 = nadie responde.
 codigo() { curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://$1:$PUERTO/Cuenta/Login"; }
 
 if [ "$(codigo 127.0.0.1)" != "200" ]; then
-  echo "Deteniendo cualquier versión anterior de la app..."
-  pkill -f -- "--urls http" 2>/dev/null
+  # Solo la app de ESTE puerto: otras copias (por ejemplo, una de prueba en el 3000) no se tocan.
+  echo "Deteniendo la versión anterior de la app en el puerto $PUERTO..."
+  pkill -f -- "--urls http.*:$PUERTO" 2>/dev/null
   sleep 2
   bash .devcontainer/iniciar.sh > /dev/null
   echo "Arrancando la app (la primera vez tarda 1-2 minutos)..."
   for _ in $(seq 1 90); do
     [ "$(codigo 127.0.0.1)" = "200" ] && break
     # Si la app ya se cayó, no tiene caso seguir esperando.
-    pgrep -f -- "--urls http" > /dev/null || break
+    pgrep -f -- "--urls http.*:$PUERTO" > /dev/null || break
     sleep 2
   done
 fi
