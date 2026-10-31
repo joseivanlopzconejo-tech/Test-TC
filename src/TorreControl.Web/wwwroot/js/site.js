@@ -20,8 +20,11 @@ window.tc.post = function (url, datos) {
     });
 };
 
-/** Notificación breve en la esquina. tipo: 'info' | 'exito' | 'error'. */
-window.tc.toast = function (mensaje, tipo = 'info') {
+/**
+ * Notificación breve abajo al centro. tipo: 'info' | 'exito' | 'error'.
+ * accion (opcional): { texto, alHacer } agrega un botón, por ejemplo "Deshacer".
+ */
+window.tc.toast = function (mensaje, tipo = 'info', accion = null) {
     const contenedor = document.getElementById('tc-toasts');
     if (!contenedor) {
         return;
@@ -30,7 +33,19 @@ window.tc.toast = function (mensaje, tipo = 'info') {
     const toast = document.createElement('div');
     toast.className = `tc-toast tc-toast-${tipo}`;
     toast.setAttribute('role', tipo === 'error' ? 'alert' : 'status');
-    toast.textContent = mensaje; // textContent: nunca se interpreta como HTML
+    const texto = document.createElement('span');
+    texto.textContent = mensaje; // textContent: nunca se interpreta como HTML
+    toast.appendChild(texto);
+    if (accion) {
+        const boton = document.createElement('button');
+        boton.type = 'button';
+        boton.textContent = accion.texto;
+        boton.addEventListener('click', () => {
+            toast.remove();
+            accion.alHacer();
+        });
+        toast.appendChild(boton);
+    }
     contenedor.appendChild(toast);
-    setTimeout(() => toast.remove(), 4500);
+    setTimeout(() => toast.remove(), accion ? 8000 : 4500);
 };

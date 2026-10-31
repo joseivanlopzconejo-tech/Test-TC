@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 # Un solo comando para usar la app en Codespaces:
-#   bash .devcontainer/probar.sh
-# Arranca la app si no está corriendo, espera a que responda y dice dónde abrirla.
+#   bash .devcontainer/probar.sh                      arranca la app y revisa que responda
+#   bash .devcontainer/probar.sh --reiniciar-datos    además borra la base y regenera los
+#                                                     datos de ejemplo (útil cuando cambian)
 # Si algo falla, muestra el error de la bitácora.
 set -uo pipefail
+
+if [ "${1:-}" = "--reiniciar-datos" ]; then
+  echo "Borrando la base de datos de ejemplo (se vuelve a crear al arrancar)..."
+  pkill -f -- "--urls http" 2>/dev/null
+  sleep 2
+  dotnet ef database drop -f --project src/TorreControl.Web > /dev/null
+fi
 
 PUERTO=5178
 BITACORA=/tmp/torre-control.log

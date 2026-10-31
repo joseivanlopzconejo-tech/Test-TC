@@ -33,6 +33,7 @@ Este Codespace ya trae .NET 10, SQL Server 2022 y los datos de ejemplo. No hay q
 
 ```bash
 bash .devcontainer/probar.sh     # arrancar la app (si no corre) y revisar que responda
+bash .devcontainer/probar.sh --reiniciar-datos   # regenerar los datos de ejemplo desde cero
 tail -f /tmp/torre-control.log   # ver lo que hace la app
 dotnet test                      # correr todas las pruebas
 ```

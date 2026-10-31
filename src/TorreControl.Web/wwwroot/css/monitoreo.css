@@ -1,330 +1,568 @@
 /*
-  Pantalla de monitoreo: la tabla donde el monitorista pasa 8 horas.
-  Idea de diseño: una hoja de cálculo moderna (cuadrícula, números de fila, celda activa,
-  barra de estado) pero sin el aspecto "de oficina": líneas muy tenues, tipografía cuidada,
-  color solo donde comunica algo (estatus, retrasos, MIXTO, incidencias).
+  Pantalla de monitoreo: donde el monitorista pasa 8 horas.
+  Idea de diseño: una hoja de cálculo viva. Se lee como Excel (filas numeradas, cuadrícula tenue,
+  celda activa), pero con tarjetas de resumen, estados en tonos pastel y movimiento sutil que
+  avisa lo que cambia. Nada se mueve sin motivo: cada animación comunica algo.
 */
 
 .tc-monitoreo {
+  --tc-alto-fijo: 0px; /* alto del bloque fijo; lo mide el JS para pegar el encabezado de la tabla */
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  padding-bottom: 4.5rem; /* espacio para la barra de estado fija */
 }
 
-/* ---- Barra de ventana (Día / Hora inicio / Hora fin / reloj) ---- */
-.tc-barra-ventana {
+/* ===== Encabezado (portada) ===== */
+.tc-portada {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.25rem 1rem;
+  overflow: hidden;
+}
+
+/* Halo pastel de fondo: da profundidad sin distraer. */
+.tc-portada::before {
+  content: "";
+  position: absolute;
+  inset: -40% -10% auto auto;
+  width: 60%;
+  height: 220%;
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--tc-lila) 22%, transparent), transparent 70%),
+    radial-gradient(closest-side at 30% 60%, color-mix(in srgb, var(--tc-cielo) 18%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tc-portada > * { position: relative; z-index: 1; }
+
+.tc-sobretitulo {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: .5rem 1rem;
-  padding: .45rem 1rem;
-  background: var(--tc-superficie);
-  border-bottom: 1px solid var(--tc-borde);
-}
-
-.tc-ventana-campos {
-  display: none;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: .5rem .75rem;
-}
-
-/* Abierta: se ven los campos. Minimizada: solo el resumen (libera espacio). */
-.tc-barra-ventana[data-abierta="true"] .tc-ventana-campos { display: flex; }
-.tc-barra-ventana[data-abierta="true"] .tc-ventana-resumen { display: none; }
-
-.tc-campo {
-  display: flex;
-  flex-direction: column;
-  gap: .2rem;
-  font-size: .7rem;
+  gap: .5rem;
+  margin: 0 0 .2rem;
+  font-size: .78rem;
   font-weight: 600;
-  letter-spacing: .04em;
+  letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--tc-texto-tenue);
 }
 
-.tc-campo .form-control {
-  background: var(--tc-superficie-2);
-  color: var(--tc-texto);
-  border-color: var(--tc-borde);
-  font-size: .85rem;
+.tc-municipio {
+  padding: .05rem .5rem;
+  border-radius: 999px;
+  background: var(--tc-superficie-3);
+  color: var(--tc-texto-suave);
+  font-size: .7rem;
+  letter-spacing: .02em;
+  text-transform: none;
 }
 
-.tc-hora {
-  width: 5.2rem;
-  text-align: center;
-  letter-spacing: .04em;
-}
+.tc-municipio:empty { display: none; }
 
-.tc-ventana-acciones {
-  display: flex;
-  gap: .4rem;
-}
-
-.tc-error-ventana {
-  flex-basis: 100%;
-  font-size: .8rem;
-  color: var(--tc-alerta);
-}
-
-.tc-error-ventana:empty { display: none; }
-
-.tc-ventana-resumen {
+.tc-planta-nombre {
   display: flex;
   align-items: center;
-  gap: .65rem;
-  font-size: .85rem;
+  gap: .6rem;
+  margin: 0;
+  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: -.02em;
 }
 
-.tc-chip-turno {
-  padding: .12rem .55rem;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--tc-acento) 15%, transparent);
-  color: var(--tc-acento);
-  font-weight: 650;
-  font-size: .78rem;
-  white-space: nowrap;
+.tc-planta-nombre .tc-etiqueta-mixto { font-size: .72rem; }
+
+/* ===== Tarjetas de resumen (también son filtros) ===== */
+.tc-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: .6rem;
 }
 
-.tc-resumen-ventana {
-  color: var(--tc-texto-suave);
-  white-space: nowrap;
+.tc-tarjeta-kpi {
+  --kpi: var(--tc-acento);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 7.2rem;
+  padding: .6rem .85rem .55rem;
+  border: 1px solid var(--tc-borde);
+  border-radius: var(--tc-radio);
+  background: var(--tc-superficie);
+  color: var(--tc-texto);
+  text-align: left;
+  box-shadow: var(--tc-sombra-suave);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 
-#tc-cambiar-ventana {
-  font-size: .8rem;
-  color: var(--tc-texto-suave);
-  text-decoration: none;
-  border-bottom: 1px dashed var(--tc-texto-tenue);
-  border-radius: 0;
+/* Línea de color arriba de cada tarjeta. */
+.tc-tarjeta-kpi::before {
+  content: "";
+  position: absolute;
+  left: .85rem;
+  right: .85rem;
+  top: -1px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--kpi);
+  opacity: .9;
 }
 
-#tc-cambiar-ventana:hover { color: var(--tc-acento); border-bottom-color: var(--tc-acento); }
+.tc-tarjeta-kpi:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--kpi) 50%, var(--tc-borde)); }
 
-.tc-reloj {
-  margin-left: auto;
-  font-size: .9rem;
+.tc-tarjeta-kpi.activo {
+  background: color-mix(in srgb, var(--kpi) 12%, var(--tc-superficie));
+  border-color: color-mix(in srgb, var(--kpi) 70%, var(--tc-borde));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--kpi) 18%, transparent);
+}
+
+.tc-kpi-etiqueta {
+  font-size: .72rem;
   font-weight: 600;
-  letter-spacing: .06em;
   color: var(--tc-texto-suave);
 }
 
-/* ---- Pestañas de planta: fijas al hacer scroll ---- */
-.tc-pestanas {
+.tc-kpi-valor {
+  font-size: 1.55rem;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -.02em;
+}
+
+.tc-kpi-pendiente { --kpi: var(--tc-durazno); }
+.tc-kpi-camino { --kpi: var(--tc-cielo); }
+.tc-kpi-final { --kpi: var(--tc-menta); }
+.tc-kpi-incidencia { --kpi: var(--tc-rosa); }
+
+/* Al cambiar un número, "brinca" un instante para que se note. */
+.tc-kpi-valor.cambio { animation: tc-brinco .45s ease; }
+
+@keyframes tc-brinco {
+  40% { transform: scale(1.14); color: var(--kpi); }
+}
+
+.tc-avance {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .4rem;
+  min-width: 12rem;
+  padding: .6rem .9rem;
+  border: 1px solid var(--tc-borde);
+  border-radius: var(--tc-radio);
+  background: var(--tc-superficie);
+  box-shadow: var(--tc-sombra-suave);
+}
+
+.tc-avance-texto {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--tc-texto-suave);
+}
+
+.tc-avance-texto strong { color: var(--tc-texto); font-size: .9rem; }
+
+.tc-avance-barra {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tc-superficie-3);
+  overflow: hidden;
+}
+
+.tc-avance-barra span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--tc-cielo), var(--tc-menta));
+  transition: width .6s cubic-bezier(.2, .8, .2, 1);
+}
+
+/* ===== Bloque fijo ===== */
+.tc-fijo {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 30;
+  background: color-mix(in srgb, var(--tc-fondo) 96%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--tc-borde);
+  transition: box-shadow .2s ease;
+}
+
+.tc-fijo.despegado { box-shadow: var(--tc-sombra); }
+
+.tc-fila-pestanas {
   display: flex;
-  gap: .15rem;
-  padding: 0 .75rem;
+  align-items: center;
+  gap: .5rem;
+  padding: .6rem 1rem 0;
+}
+
+/* --- Pestañas tipo "píldora" con un fondo que se desliza a la elegida --- */
+.tc-pestanas {
+  position: relative;
+  display: flex;
+  flex: 1;
+  gap: .35rem;
+  padding: .25rem;
   overflow-x: auto;
   scrollbar-width: thin;
-  background: var(--tc-superficie);
-  border-bottom: 1px solid var(--tc-borde);
+  border-radius: 14px;
+  background: var(--tc-superficie-2);
+  border: 1px solid var(--tc-borde-suave);
 }
 
 .tc-pestana {
+  --etiqueta: transparent;
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: .5rem;
-  padding: .6rem .8rem .55rem;
-  border: none;
+  flex: none;
+  padding: .42rem .55rem .42rem .75rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
   background: transparent;
   color: var(--tc-texto-suave);
-  font-size: .85rem;
-  font-weight: 500;
+  font-size: .82rem;
+  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
+  transition: background .2s ease, color .2s ease, box-shadow .2s ease;
 }
 
-.tc-pestana:hover { color: var(--tc-texto); }
+.tc-pestana:hover { color: var(--tc-texto); background: var(--tc-superficie-3); }
 
 .tc-pestana[aria-selected="true"] {
   color: var(--tc-texto);
-  font-weight: 600;
+  background: var(--tc-superficie);
+  border-color: var(--tc-borde);
+  box-shadow: var(--tc-sombra-suave), inset 0 -2px 0 var(--tc-acento);
 }
 
-/* Subrayado de la pestaña activa. */
-.tc-pestana[aria-selected="true"]::after {
+/* Punto de color de la etiqueta que puso el monitorista. */
+.tc-pestana::before {
   content: "";
-  position: absolute;
-  left: .6rem;
-  right: .6rem;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: var(--tc-acento);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--etiqueta);
+  flex: none;
+  display: none;
 }
 
-.tc-pestana .tc-cliente {
-  font-size: .72rem;
-  font-weight: 400;
+.tc-pestana.con-etiqueta::before { display: block; }
+
+.tc-pestana-textos {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.tc-pestana-nota {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: .66rem;
+  font-weight: 500;
   color: var(--tc-texto-tenue);
 }
 
+.tc-pestana.mixto { color: color-mix(in srgb, var(--tc-mixto) 75%, var(--tc-texto-suave)); }
+.tc-pestana.mixto[aria-selected="true"] { box-shadow: var(--tc-sombra-suave), inset 0 -2px 0 var(--tc-mixto); }
+
 .tc-contador {
   min-width: 1.5rem;
-  padding: .05rem .4rem;
-  border-radius: 6px;
+  padding: .05rem .42rem;
+  border-radius: 999px;
   background: var(--tc-superficie-3);
   color: var(--tc-texto-suave);
-  font-size: .72rem;
-  font-weight: 650;
+  font-size: .7rem;
+  font-weight: 700;
   text-align: center;
+  transition: background .2s ease, color .2s ease;
 }
 
 .tc-pestana[aria-selected="true"] .tc-contador {
-  background: color-mix(in srgb, var(--tc-acento) 18%, transparent);
+  background: color-mix(in srgb, var(--tc-acento) 22%, transparent);
   color: var(--tc-acento);
 }
 
-.tc-pestana.arrastrando { opacity: .4; }
-.tc-pestana.destino-arrastre { box-shadow: inset 2px 0 0 var(--tc-acento); }
+/* Acciones de la pestaña (etiqueta y ocultar): aparecen al pasar el mouse. */
+/* Sin ancho hasta pasar el mouse (como la ✕ de las pestañas del navegador): no dejan hueco. */
+.tc-pestana-accion {
+  display: inline-grid;
+  place-items: center;
+  width: 0;
+  height: 1.25rem;
+  margin-left: -.25rem;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tc-texto-tenue);
+  opacity: 0;
+  transition: width .15s ease, margin .15s ease, opacity .15s ease, background .15s ease, color .15s ease;
+}
 
-/* ---- Herramientas ---- */
+.tc-pestana:hover .tc-pestana-accion,
+.tc-pestana:focus-visible .tc-pestana-accion { width: 1.25rem; margin-left: 0; opacity: 1; }
+.tc-pestana-accion:hover { background: var(--tc-superficie-3); color: var(--tc-texto); }
+.tc-pestana-accion svg { width: 13px; height: 13px; }
+
+.tc-pestana.arrastrando { opacity: .4; }
+.tc-pestana.destino-arrastre { box-shadow: inset 3px 0 0 var(--tc-acento); }
+
+/* --- Herramientas --- */
 .tc-herramientas {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: .5rem .75rem;
-  padding: .6rem 1rem;
+  gap: .55rem .75rem;
+  padding: .6rem 1rem .7rem;
 }
 
+/* Selector de turno: segmentos con un indicador que se desliza al elegido. */
+.tc-turnos {
+  position: relative;
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--tc-borde);
+  border-radius: 12px;
+  background: var(--tc-superficie);
+}
+
+.tc-turnos-indicador {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 0;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--tc-acento) 18%, var(--tc-superficie-3));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc-acento) 45%, transparent);
+  transition: transform .3s cubic-bezier(.2, .8, .2, 1), width .3s cubic-bezier(.2, .8, .2, 1);
+}
+
+.tc-turno {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .7rem;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--tc-texto-suave);
+  font-size: .8rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.tc-turno:hover { color: var(--tc-texto); }
+.tc-turno[aria-checked="true"] { color: var(--tc-texto); }
+
+.tc-turno .tc-contador { font-size: .66rem; }
+.tc-turno[aria-checked="true"] .tc-contador { background: color-mix(in srgb, var(--tc-acento) 25%, transparent); color: var(--tc-acento); }
+
+/* Punto que late en el turno que está corriendo ahora. */
+.tc-turno-ahora::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tc-menta);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--tc-menta) 60%, transparent);
+  animation: tc-latido 2s ease-out infinite;
+}
+
+@keyframes tc-latido {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tc-menta) 55%, transparent); }
+  80%, 100% { box-shadow: 0 0 0 7px transparent; }
+}
+
+.tc-dia,
 .tc-buscar {
   display: flex;
   align-items: center;
-  gap: .4rem;
-  width: 17rem;
-  max-width: 100%;
+  gap: .45rem;
   margin: 0;
-  padding: 0 .6rem;
+  padding: 0 .65rem;
+  height: 2.15rem;
   border: 1px solid var(--tc-borde);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--tc-superficie);
   color: var(--tc-texto-tenue);
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 
-.tc-buscar:focus-within { border-color: var(--tc-acento); }
+.tc-dia:focus-within,
+.tc-buscar:focus-within {
+  border-color: var(--tc-acento);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc-acento) 20%, transparent);
+}
 
+.tc-dia svg,
 .tc-buscar svg { width: 15px; height: 15px; flex: none; }
 
+.tc-dia input,
 .tc-buscar input {
-  width: 100%;
-  padding: .32rem 0;
   border: none;
   outline: none;
   background: transparent;
   color: var(--tc-texto);
-  font-size: .85rem;
+  font-size: .83rem;
 }
 
-.tc-filtros-rapidos {
-  display: inline-flex;
-  padding: 2px;
-  gap: 2px;
+.tc-buscar { width: 18rem; max-width: 100%; }
+.tc-buscar input { width: 100%; }
+
+.tc-buscar kbd {
+  padding: .05rem .35rem;
   border: 1px solid var(--tc-borde);
-  border-radius: 8px;
-  background: var(--tc-superficie);
-}
-
-.tc-filtro {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-  padding: .22rem .6rem;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--tc-texto-suave);
-  font-size: .8rem;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.tc-filtro:hover { color: var(--tc-texto); }
-
-.tc-filtro.activo {
-  background: var(--tc-superficie-3);
-  color: var(--tc-texto);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
-}
-
-.tc-cuenta {
-  font-size: .72rem;
+  border-radius: 5px;
+  background: var(--tc-superficie-2);
   color: var(--tc-texto-tenue);
+  font-size: .68rem;
+  box-shadow: none;
 }
-
-.tc-filtro.activo .tc-cuenta { color: var(--tc-acento); }
 
 .tc-herramientas-derecha {
   display: flex;
-  gap: .4rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .45rem;
   margin-left: auto;
 }
 
-.tc-menu-columnas {
+.tc-boton-suave,
+.tc-boton-principal {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  height: 2.15rem;
+  padding: 0 .8rem;
+  border: 1px solid var(--tc-borde);
+  border-radius: 10px;
+  background: var(--tc-superficie);
+  color: var(--tc-texto-suave);
+  font-size: .8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
+}
+
+.tc-boton-suave:hover { color: var(--tc-texto); background: var(--tc-superficie-3); }
+.tc-boton-suave[aria-pressed="true"] { color: var(--tc-texto); border-color: var(--tc-acento); }
+
+.tc-boton-principal {
+  border-color: transparent;
+  background: var(--tc-acento);
+  color: var(--tc-acento-texto);
+}
+
+.tc-boton-principal:hover { transform: translateY(-1px); }
+
+.tc-boton-alerta {
+  border-color: color-mix(in srgb, var(--tc-rosa) 60%, var(--tc-borde));
+  background: color-mix(in srgb, var(--tc-rosa) 14%, var(--tc-superficie));
+  color: color-mix(in srgb, var(--tc-rosa) var(--tc-mezcla-chip), var(--tc-texto));
+  animation: tc-aparecer .2s ease-out;
+}
+
+.tc-reloj-caja {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding-left: .4rem;
+}
+
+.tc-reloj {
+  font-size: .92rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  color: var(--tc-texto);
+}
+
+.tc-punto-vivo {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tc-menta);
+  animation: tc-latido 2s ease-out infinite;
+}
+
+.tc-menu {
   max-height: 60vh;
   overflow-y: auto;
-  padding: .35rem 0;
-  background: var(--tc-superficie);
+  padding: .35rem;
   border-color: var(--tc-borde);
+  border-radius: 12px;
+  background: var(--tc-superficie);
   box-shadow: var(--tc-sombra);
 }
 
-.tc-menu-columnas label {
+.tc-menu label,
+.tc-menu button {
   display: flex;
   align-items: center;
   gap: .55rem;
-  padding: .25rem .9rem;
+  width: 100%;
+  padding: .35rem .65rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tc-texto);
   font-size: .83rem;
+  text-align: left;
   cursor: pointer;
 }
 
-.tc-menu-columnas label:hover { background: var(--tc-superficie-3); }
+.tc-menu label:hover,
+.tc-menu button:hover { background: var(--tc-superficie-3); }
 
 .tc-vacio {
-  margin: 2rem auto;
+  margin: 3rem auto;
   color: var(--tc-texto-suave);
+  text-align: center;
 }
 
-/* ---- Barra de estado ---- */
-.tc-barra-estado {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: .25rem 1.25rem;
-  padding: .4rem 1rem .5rem;
-  font-size: .75rem;
-  color: var(--tc-texto-tenue);
-}
-
-.tc-barra-estado strong { color: var(--tc-texto-suave); font-weight: 600; }
-.tc-seleccion:empty { display: none; }
-.tc-estado { margin-left: auto; }
-.tc-estado.error { color: var(--tc-alerta); }
-
-/* ---- Tabla (Tabulator con nuestros colores) ---- */
+/* ===== Tabla ===== */
+/* overflow visible: así el encabezado puede quedarse pegado bajo el bloque fijo al bajar. */
 .tc-tabla.tabulator {
-  margin: 0 1rem;
+  overflow: visible;
+  margin: .9rem 1rem 0;
   border: 1px solid var(--tc-borde);
   border-radius: var(--tc-radio);
   background: var(--tc-superficie);
   color: var(--tc-texto);
   font-size: .83rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+  box-shadow: var(--tc-sombra-suave);
 }
 
-/* Encabezado: dos niveles (grupo y columna), letra pequeña en mayúsculas. */
 .tc-tabla .tabulator-header {
+  position: sticky;
+  top: var(--tc-alto-fijo);
+  z-index: 20;
+  border-radius: var(--tc-radio) var(--tc-radio) 0 0;
   background: var(--tc-superficie-2);
   border-bottom: 1px solid var(--tc-borde);
   color: var(--tc-texto-tenue);
-  font-size: .68rem;
-  font-weight: 650;
-  letter-spacing: .05em;
+  font-size: .67rem;
+  font-weight: 700;
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
@@ -333,7 +571,7 @@
   border-right: 1px solid var(--tc-borde-suave);
 }
 
-.tc-tabla .tabulator-header .tabulator-col .tabulator-col-content { padding: .5rem .55rem; }
+.tc-tabla .tabulator-header .tabulator-col .tabulator-col-content { padding: .55rem .6rem; }
 
 .tc-tabla .tabulator-header .tabulator-col.tabulator-col-group > .tabulator-col-content {
   padding-bottom: .3rem;
@@ -341,76 +579,146 @@
   text-align: center;
 }
 
-.tc-tabla .tabulator-header .tabulator-col .tabulator-col-group-cols {
-  border-top: 1px solid var(--tc-borde-suave);
-}
+.tc-tabla .tabulator-header .tabulator-col .tabulator-col-group-cols { border-top: 1px solid var(--tc-borde-suave); }
 
-.tc-tabla .tabulator-header .tabulator-col.tabulator-sortable:hover { background: var(--tc-superficie-3); }
-
-/* Flechas de orden discretas; solo resalta la de la columna ordenada. */
-.tc-tabla.tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort=none] .tabulator-col-content .tabulator-col-sorter .tabulator-arrow {
-  border-bottom-color: var(--tc-borde);
-}
-.tc-tabla.tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort=ascending] .tabulator-col-content .tabulator-col-sorter .tabulator-arrow {
-  border-bottom-color: var(--tc-acento);
-}
-.tc-tabla.tabulator .tabulator-header .tabulator-col.tabulator-sortable[aria-sort=descending] .tabulator-col-content .tabulator-col-sorter .tabulator-arrow {
-  border-top-color: var(--tc-acento);
-}
-
-.tc-tabla .tabulator-tableholder { background: var(--tc-superficie); }
-
+.tc-tabla .tabulator-tableholder,
 .tc-tabla .tabulator-tableholder .tabulator-table {
   background: var(--tc-superficie);
   color: var(--tc-texto);
 }
 
-/* Cuadrícula tenue: se intuye la hoja de cálculo sin "rayar" la pantalla. */
+/* La barra horizontal propia de la tabla se esconde: se usa la de la barra de estado. */
+.tc-tabla .tabulator-tableholder { scrollbar-width: none; }
+.tc-tabla .tabulator-tableholder::-webkit-scrollbar { display: none; }
+
 .tc-tabla .tabulator-row {
   background: var(--tc-superficie);
   border-bottom: 1px solid var(--tc-borde-suave);
+  transition: background .2s ease;
 }
 
 .tc-tabla .tabulator-row.tabulator-row-even { background: var(--tc-superficie); }
-.tc-tabla .tabulator-row:hover { background: color-mix(in srgb, var(--tc-acento) 5%, var(--tc-superficie)); }
+.tc-tabla .tabulator-row:hover { background: color-mix(in srgb, var(--tc-acento) 6%, var(--tc-superficie)); }
 
 .tc-tabla .tabulator-row .tabulator-cell {
-  padding: .5rem .55rem;
+  padding: .55rem .6rem;
   border-right: 1px solid var(--tc-borde-suave);
 }
 
-/* Densidad compacta: más filas a la vista para turnos con muchas rutas. */
-.tc-tabla.tc-compacta .tabulator-row .tabulator-cell { padding-top: .28rem; padding-bottom: .28rem; }
+.tc-tabla.tc-compacta .tabulator-row .tabulator-cell { padding-top: .3rem; padding-bottom: .3rem; }
 
-/* Números de fila, como en una hoja de cálculo. */
-.tc-tabla .tabulator-row .tabulator-row-header,
-.tc-tabla .tabulator-header .tabulator-row-header {
-  color: var(--tc-texto-tenue);
-  font-size: .72rem;
-  background: var(--tc-superficie-2);
-}
-
-/* Columnas congeladas: fondo opaco y una sombra suave en el borde, como al inmovilizar paneles. */
+/* Columnas congeladas: fondo opaco y sombra suave en el borde, como al inmovilizar paneles. */
 .tc-tabla .tabulator-row .tabulator-cell.tabulator-frozen { background: inherit; }
 .tc-tabla .tabulator-row .tabulator-cell.tabulator-frozen.tabulator-frozen-left,
 .tc-tabla .tabulator-header .tabulator-col.tabulator-frozen.tabulator-frozen-left {
   border-right: 1px solid var(--tc-borde);
-  box-shadow: 6px 0 8px -6px rgba(0, 0, 0, .45);
+  box-shadow: 8px 0 10px -8px rgba(3, 6, 18, .45);
 }
 
-/* Celda activa y rango seleccionado (selección con teclado o arrastrando). */
+/* --- Encabezados de bloque (Entradas / Salidas) --- */
+.tc-tabla .tabulator-row.tabulator-group {
+  min-height: 2.6rem;
+  padding: .55rem .9rem;
+  border-top: 1px solid var(--tc-borde);
+  border-bottom: 1px solid var(--tc-borde);
+  background: var(--tc-superficie-2);
+  color: var(--tc-texto);
+  font-weight: 700;
+}
+
+.tc-tabla .tabulator-row.tabulator-group:hover { background: var(--tc-superficie-3); }
+
+/* Tabulator pinta en rojo los textos del encabezado de grupo: se usan los colores propios. */
+.tc-tabla .tabulator-row.tabulator-group span { margin-left: 0; color: inherit; }
+.tc-tabla .tabulator-row.tabulator-group .tc-bloque-cuenta { color: var(--tc-texto-suave); }
+.tc-tabla .tabulator-row.tabulator-group .tc-bloque-ayuda { color: var(--tc-texto-tenue); }
+
+.tc-tabla .tabulator-row.tabulator-group .tabulator-arrow {
+  border-left-color: var(--tc-texto-suave);
+  margin-right: .7rem;
+}
+
+.tc-tabla .tabulator-row.tabulator-group.tabulator-group-visible .tabulator-arrow { border-top-color: var(--tc-texto-suave); }
+
+.tc-bloque {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .78rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.tc-bloque-cuenta {
+  padding: .05rem .5rem;
+  border-radius: 999px;
+  background: var(--tc-superficie-3);
+  color: var(--tc-texto-suave);
+  font-size: .7rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.tc-bloque-ayuda {
+  font-size: .7rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--tc-texto-tenue);
+}
+
+/* --- Números de fila (como Excel) con botón para ocultar --- */
+.tc-tabla .tabulator-row .tabulator-row-header,
+.tc-tabla .tabulator-header .tabulator-row-header {
+  background: var(--tc-superficie-2);
+  color: var(--tc-texto-tenue);
+  font-size: .72rem;
+}
+
+/* Número a la izquierda (clic = elegir la fila) y botón para ocultar a la derecha: separados
+   para que elegir una fila nunca la oculte por accidente. */
+.tc-numero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .2rem;
+  height: 100%;
+  padding-left: .35rem;
+}
+
+.tc-numero-boton {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--tc-texto-tenue);
+  opacity: 0;
+  transition: opacity .15s ease, color .15s ease, border-color .15s ease, background .15s ease;
+}
+
+.tc-numero-boton svg { width: 13px; height: 13px; }
+.tabulator-row:hover .tc-numero-boton,
+.tc-numero-boton:focus-visible { opacity: 1; }
+.tc-numero-boton:hover { color: var(--tc-alerta); border-color: var(--tc-alerta); background: var(--tc-superficie); }
+
+/* Franja de color del estatus junto al número: el estado de cada fila se ve de reojo. */
+.tc-tabla .tabulator-row .tabulator-row-header { box-shadow: inset 3px 0 0 var(--franja, transparent); }
+
 .tc-tabla .tabulator-range-overlay .tabulator-range {
   border: 1px solid var(--tc-acento);
-  background: color-mix(in srgb, var(--tc-acento) 9%, transparent);
+  background: color-mix(in srgb, var(--tc-acento) 10%, transparent);
 }
 
-.tc-tabla .tabulator-range-overlay .tabulator-range.tabulator-range-active::after {
-  background-color: var(--tc-acento);
-}
+.tc-tabla .tabulator-range-overlay .tabulator-range.tabulator-range-active::after { background-color: var(--tc-acento); }
 
 .tc-tabla .tabulator-range-overlay .tabulator-range-cell-active {
   border: 2px solid var(--tc-acento);
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 .tc-tabla .tabulator-header .tabulator-col.tabulator-range-highlight,
@@ -421,14 +729,35 @@
 
 .tc-tabla .tabulator-header .tabulator-col.tabulator-range-selected,
 .tc-tabla .tabulator-row .tabulator-row-header.tabulator-range-selected {
-  background: color-mix(in srgb, var(--tc-acento) 28%, var(--tc-superficie-2));
+  background: color-mix(in srgb, var(--tc-acento) 30%, var(--tc-superficie-2));
   color: var(--tc-texto);
 }
 
-/* Fila MIXTA: franja violeta en el número de fila. Con incidencia: franja roja. */
-.tc-tabla .tabulator-row.tc-fila-mixto .tabulator-row-header { box-shadow: inset 3px 0 0 var(--tc-mixto); }
-.tc-tabla .tabulator-row.tc-fila-incidencia .tabulator-row-header { box-shadow: inset 3px 0 0 var(--tc-alerta); }
-.tc-tabla .tabulator-row.tc-fila-mixto.tc-fila-incidencia .tabulator-row-header { box-shadow: inset 3px 0 0 var(--tc-alerta), inset 6px 0 0 var(--tc-mixto); }
+/* Celdas seleccionadas: tinte suave del acento (Tabulator usa un azul fuerte que no deja leer). */
+.tc-tabla.tabulator .tabulator-cell.tabulator-range-selected:not(.tabulator-range-only-cell-selected):not(.tabulator-range-row-header) {
+  background-color: color-mix(in srgb, var(--tc-acento) 16%, var(--tc-superficie));
+}
+
+.tc-tabla.tabulator .tabulator-range-selected .tabulator-cell.tabulator-range-row-header,
+.tc-tabla.tabulator .tabulator-row.tabulator-range-selected .tabulator-cell.tabulator-range-row-header,
+.tc-tabla.tabulator .tabulator-cell.tabulator-range-row-header.tabulator-range-selected {
+  background-color: color-mix(in srgb, var(--tc-acento) 34%, var(--tc-superficie-2));
+  color: var(--tc-texto);
+}
+
+/* Fila "no operó" (solo visible al pedir ver las ocultas). */
+.tc-tabla .tabulator-row.tc-fila-no-opero .tabulator-cell:not(.tabulator-row-header) { opacity: .45; }
+.tc-tabla .tabulator-row.tc-fila-no-opero .tc-ruta-nombre { text-decoration: line-through; }
+.tc-tabla .tabulator-row.tc-fila-no-opero .tc-numero-boton { opacity: 1; color: var(--tc-ok); }
+.tc-tabla .tabulator-row.tc-fila-no-opero .tc-numero-boton:hover { border-color: var(--tc-ok); }
+
+/* Movimiento: una fila cuyos datos cambiaron se ilumina un momento. */
+.tc-tabla .tabulator-row.tc-cambio { animation: tc-destello 1.6s ease-out; }
+
+@keyframes tc-destello {
+  0%, 25% { background: color-mix(in srgb, var(--tc-mantequilla) 26%, var(--tc-superficie)); }
+  100% { background: var(--tc-superficie); }
+}
 
 .tc-tabla .tabulator-placeholder .tabulator-placeholder-contents {
   color: var(--tc-texto-tenue);
@@ -436,7 +765,7 @@
   font-weight: 500;
 }
 
-/* ---- Contenido de celdas ---- */
+/* ===== Contenido de celdas ===== */
 .tc-ruta {
   display: flex;
   align-items: center;
@@ -447,91 +776,125 @@
 .tc-ruta-nombre {
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .tc-tipo {
   flex: none;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 4px;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 6px;
   display: inline-grid;
   place-items: center;
-  font-size: .66rem;
-  font-weight: 750;
+  font-size: .65rem;
+  font-weight: 800;
 }
 
-.tc-tipo-E { background: color-mix(in srgb, var(--tc-acento) 16%, transparent); color: var(--tc-acento); }
-.tc-tipo-S { background: color-mix(in srgb, var(--tc-ok) 16%, transparent); color: var(--tc-ok); }
+.tc-tipo-E { background: color-mix(in srgb, var(--tc-cielo) var(--tc-fondo-chip), transparent); color: color-mix(in srgb, var(--tc-cielo) var(--tc-mezcla-chip), var(--tc-texto)); }
+.tc-tipo-S { background: color-mix(in srgb, var(--tc-durazno) var(--tc-fondo-chip), transparent); color: color-mix(in srgb, var(--tc-durazno) var(--tc-mezcla-chip), var(--tc-texto)); }
 
 .tc-etiqueta {
   flex: none;
-  padding: .05rem .35rem;
-  border-radius: 4px;
-  font-size: .62rem;
-  font-weight: 750;
+  padding: .08rem .38rem;
+  border-radius: 5px;
+  font-size: .6rem;
+  font-weight: 800;
   letter-spacing: .05em;
 }
 
 /* MIXTO destacado: sólido, para que se distinga de un vistazo. */
-.tc-etiqueta-mixto { background: var(--tc-mixto); color: #fff; }
+.tc-etiqueta-mixto { background: var(--tc-mixto); color: #1b1530; }
 .tc-etiqueta-medianoche { border: 1px solid var(--tc-borde); color: var(--tc-texto-suave); }
+.tc-etiqueta-especial { background: color-mix(in srgb, var(--tc-mantequilla) var(--tc-fondo-chip), transparent); color: color-mix(in srgb, var(--tc-mantequilla) var(--tc-mezcla-chip), var(--tc-texto)); }
 
-/* Chip de estatus: tinte suave del color del estatus (lo pone el JS en --chip). Se adapta solo
-   a tema claro u oscuro mezclando el color con el del texto. */
+/* "Sale en 12 min": aviso informativo de lo que está por salir. */
+.tc-pronto {
+  flex: none;
+  padding: .06rem .4rem;
+  border-radius: 999px;
+  font-size: .64rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--tc-durazno) var(--tc-fondo-chip), transparent);
+  color: color-mix(in srgb, var(--tc-durazno) var(--tc-mezcla-chip), var(--tc-texto));
+}
+
+.tc-pronto.atrasado {
+  background: color-mix(in srgb, var(--tc-rosa) var(--tc-fondo-chip), transparent);
+  color: color-mix(in srgb, var(--tc-rosa) var(--tc-mezcla-chip), var(--tc-texto));
+  animation: tc-pulso 1.6s ease-in-out infinite;
+}
+
+@keyframes tc-pulso { 50% { opacity: .55; } }
+
+/* Chip de estatus: tinte suave del color (lo pone el JS en --chip). Se adapta solo al tema. */
 .tc-chip {
   --chip: var(--tc-sin-accion);
   display: inline-flex;
   align-items: center;
   gap: .38rem;
   max-width: 100%;
-  padding: .12rem .5rem .12rem .42rem;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--chip) 15%, transparent);
-  color: color-mix(in srgb, var(--chip) 70%, var(--tc-texto));
-  font-size: .76rem;
-  font-weight: 600;
+  padding: .14rem .55rem .14rem .45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--chip) var(--tc-fondo-chip), transparent);
+  color: color-mix(in srgb, var(--chip) var(--tc-mezcla-chip), var(--tc-texto));
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .02em;
   line-height: 1.35;
+  text-transform: uppercase;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tc-chip::before {
   content: "";
   flex: none;
-  width: .45rem;
-  height: .45rem;
+  width: .42rem;
+  height: .42rem;
   border-radius: 50%;
   background: var(--chip);
 }
 
-/* "Sin acción": neutro, con contorno punteado (es la ausencia de dato, no un estado). */
+/* "Sin acción": neutro, con contorno punteado (es ausencia de dato, no un estado). */
 .tc-chip-vacio {
   background: transparent;
-  border: 1px dashed color-mix(in srgb, var(--tc-sin-accion) 60%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--tc-sin-accion) 55%, transparent);
   color: var(--tc-texto-tenue);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .tc-chip-vacio::before { background: transparent; border: 1px solid var(--tc-sin-accion); }
 
-.tc-unidad { font-weight: 650; }
+.tc-chip-hora { text-transform: none; font-variant-numeric: tabular-nums; }
+
+.tc-unidad { font-weight: 700; }
 
 .tc-apoyos {
   margin-left: .35rem;
-  padding: 0 .3rem;
-  border-radius: 4px;
-  background: var(--tc-superficie-3);
-  color: var(--tc-texto-suave);
-  font-size: .7rem;
-  font-weight: 650;
+  padding: .02rem .35rem;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--tc-lila) var(--tc-fondo-chip), transparent);
+  color: color-mix(in srgb, var(--tc-lila) var(--tc-mezcla-chip), var(--tc-texto));
+  font-size: .68rem;
+  font-weight: 750;
 }
 
-.tc-nulo { color: var(--tc-texto-tenue); opacity: .55; }
+.tc-nulo { color: var(--tc-texto-tenue); opacity: .5; }
 
-.tc-dif { font-weight: 650; }
-.tc-dif-ok { color: var(--tc-ok); }
-.tc-dif-aviso { color: var(--tc-aviso); }
-.tc-dif-alerta { color: var(--tc-alerta); }
+/* Diferencia de minutos: verde a tiempo, naranja dentro de tolerancia, rojo fuera. */
+.tc-dif {
+  display: inline-block;
+  min-width: 2.4rem;
+  padding: .06rem .4rem;
+  border-radius: 7px;
+  font-weight: 750;
+  text-align: center;
+}
+
+.tc-dif-ok { background: color-mix(in srgb, var(--tc-menta) var(--tc-fondo-chip), transparent); color: color-mix(in srgb, var(--tc-menta) var(--tc-mezcla-chip), var(--tc-texto)); }
+.tc-dif-aviso { background: color-mix(in srgb, var(--tc-durazno) var(--tc-fondo-chip), transparent); color: color-mix(in srgb, var(--tc-durazno) var(--tc-mezcla-chip), var(--tc-texto)); }
+.tc-dif-alerta { background: color-mix(in srgb, var(--tc-rosa) var(--tc-fondo-chip), transparent); color: color-mix(in srgb, var(--tc-rosa) var(--tc-mezcla-chip), var(--tc-texto)); }
 
 .tc-filtro-celda {
   display: inline-flex;
@@ -539,27 +902,21 @@
   gap: .3rem;
 }
 
-.tc-mods {
-  font-size: .68rem;
-  color: var(--tc-texto-tenue);
-}
+.tc-mods { font-size: .66rem; font-weight: 700; color: var(--tc-texto-tenue); }
 
 .tc-operador {
   display: flex;
   align-items: center;
-  gap: .4rem;
+  gap: .45rem;
   min-width: 0;
 }
 
-.tc-operador-nombre {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+.tc-operador-nombre { overflow: hidden; text-overflow: ellipsis; }
 
 .tc-boton-info {
   flex: none;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1.25rem;
+  height: 1.25rem;
   padding: 0;
   border: 1px solid var(--tc-borde);
   border-radius: 50%;
@@ -582,17 +939,55 @@
   color: var(--tc-texto-suave);
 }
 
-/* ---- Ficha del operador (popover) ---- */
+/* ===== Barra de estado fija abajo ===== */
+.tc-barra-estado {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--tc-fondo) 90%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--tc-borde);
+}
+
+/* Barra de desplazamiento horizontal siempre visible (no hay que bajar al final de la tabla). */
+.tc-scroll-horizontal {
+  height: 12px;
+  margin: 0 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.tc-scroll-horizontal > div { height: 1px; }
+
+.tc-barra-estado-texto {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .25rem 1.25rem;
+  padding: .3rem 1rem .5rem;
+  font-size: .74rem;
+  color: var(--tc-texto-tenue);
+}
+
+.tc-seleccion { color: var(--tc-texto-suave); font-weight: 600; }
+.tc-seleccion:empty { display: none; }
+.tc-estado { margin-left: auto; }
+.tc-estado.error { color: var(--tc-alerta); }
+
+/* ===== Ventanitas: ficha del operador, etiqueta de pestaña, confirmación ===== */
 .tc-ficha {
   position: fixed;
   z-index: 1070;
   min-width: 15rem;
-  padding: .75rem .9rem;
+  padding: .8rem .95rem;
   background: var(--tc-superficie);
   border: 1px solid var(--tc-borde);
   border-radius: var(--tc-radio);
   box-shadow: var(--tc-sombra);
   font-size: .83rem;
+  animation: tc-aparecer .16s ease-out;
 }
 
 .tc-ficha[hidden] { display: none; }
@@ -600,31 +995,102 @@
 .tc-ficha dl {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: .3rem .9rem;
+  gap: .35rem .9rem;
   margin: 0;
 }
 
 .tc-ficha dt {
-  color: var(--tc-texto-tenue);
-  font-size: .7rem;
-  font-weight: 600;
-  letter-spacing: .04em;
-  text-transform: uppercase;
   align-self: center;
+  color: var(--tc-texto-tenue);
+  font-size: .68rem;
+  font-weight: 650;
+  letter-spacing: .05em;
+  text-transform: uppercase;
 }
 
 .tc-ficha dd { margin: 0; }
 
-/* ---- Ventana a media pantalla (dos ventanas lado a lado) ---- */
-@media (max-width: 1000px) {
-  .tc-herramientas { padding: .5rem .6rem; }
-  .tc-buscar { width: 12rem; }
-  .tc-tabla.tabulator { margin: 0 .5rem; }
+.tc-editor-pestana { width: 16.5rem; }
+.tc-editor-pestana h3 { margin: 0 0 .6rem; font-size: .85rem; font-weight: 700; }
+
+.tc-colores {
+  display: flex;
+  gap: .4rem;
+  margin-bottom: .7rem;
+}
+
+.tc-color {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: var(--muestra);
+  transition: transform .15s ease;
+}
+
+.tc-color:hover { transform: scale(1.12); }
+.tc-color[aria-pressed="true"] { border-color: var(--tc-texto); }
+.tc-color-ninguno { background: transparent; border: 2px dashed var(--tc-borde); }
+
+.tc-editor-pestana input {
+  width: 100%;
+  margin-bottom: .7rem;
+  padding: .45rem .6rem;
+  border: 1px solid var(--tc-borde);
+  border-radius: 9px;
+  background: var(--tc-superficie-2);
+  color: var(--tc-texto);
+  font-size: .83rem;
+}
+
+.tc-editor-botones { display: flex; justify-content: flex-end; gap: .4rem; }
+
+.tc-dialogo-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(5, 8, 20, .45);
+  backdrop-filter: blur(3px);
+  animation: tc-aparecer .15s ease-out;
+}
+
+.tc-dialogo-fondo[hidden] { display: none; }
+
+.tc-dialogo {
+  width: min(26rem, 100%);
+  padding: 1.25rem 1.35rem 1.1rem;
+  border: 1px solid var(--tc-borde);
+  border-radius: 16px;
+  background: var(--tc-superficie);
+  box-shadow: var(--tc-sombra);
+  animation: tc-subir .2s cubic-bezier(.2, .8, .2, 1);
+}
+
+.tc-dialogo-titulo { margin: 0 0 .4rem; font-size: 1.02rem; font-weight: 700; }
+.tc-dialogo-texto { margin: 0 0 1.1rem; color: var(--tc-texto-suave); font-size: .88rem; }
+.tc-dialogo-botones { display: flex; justify-content: flex-end; gap: .5rem; }
+
+@keyframes tc-aparecer { from { opacity: 0; } }
+@keyframes tc-subir { from { opacity: 0; transform: translateY(10px) scale(.98); } }
+
+/* ===== Media pantalla (dos ventanas lado a lado) ===== */
+@media (max-width: 1100px) {
+  .tc-portada { padding: 1rem .75rem .75rem; }
+  .tc-tarjeta-kpi { min-width: 6.2rem; padding: .5rem .7rem; }
+  .tc-kpi-valor { font-size: 1.3rem; }
+  .tc-avance { min-width: 9rem; }
+  .tc-fila-pestanas, .tc-herramientas { padding-left: .6rem; padding-right: .6rem; }
+  .tc-buscar { width: 13rem; }
+  .tc-tabla.tabulator { margin: .7rem .5rem 0; }
   .tc-atajo { display: none; }
+  .tc-herramientas-derecha { margin-left: 0; }
 }
 
 @media (max-width: 640px) {
-  .tc-pestana .tc-cliente { display: none; }
-  .tc-filtros-rapidos { overflow-x: auto; max-width: 100%; }
-  .tc-herramientas-derecha { margin-left: 0; }
+  .tc-resumen { width: 100%; }
+  .tc-tarjeta-kpi { flex: 1 1 30%; }
+  .tc-avance { flex: 1 1 100%; }
 }

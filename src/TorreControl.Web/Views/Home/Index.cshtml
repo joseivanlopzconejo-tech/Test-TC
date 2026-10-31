@@ -9,77 +9,107 @@
 }
 
 <div class="tc-monitoreo">
-    @* ---- Barra de ventana: Día / Hora inicio / Hora fin / reloj. Se minimiza una vez fijada. ---- *@
-    <section id="tc-barra-ventana" class="tc-barra-ventana" data-abierta="false" aria-label="Ventana de horas">
-        <form id="tc-form-ventana" class="tc-ventana-campos" novalidate>
-            <label class="tc-campo">
-                <span>Día</span>
-                <input type="date" id="tc-dia" class="form-control form-control-sm" required />
-            </label>
-            <label class="tc-campo">
-                <span>Hora inicio</span>
-                <input type="text" id="tc-desde" class="form-control form-control-sm tc-hora" inputmode="numeric"
-                       maxlength="5" placeholder="HH:mm" autocomplete="off" required />
-            </label>
-            <label class="tc-campo">
-                <span>Hora fin</span>
-                <input type="text" id="tc-hasta" class="form-control form-control-sm tc-hora" inputmode="numeric"
-                       maxlength="5" placeholder="HH:mm" autocomplete="off" required />
-            </label>
-            <div class="tc-ventana-acciones">
-                <button type="submit" class="btn btn-sm btn-primary">Aplicar</button>
-                <button type="button" id="tc-turno-actual" class="btn btn-sm btn-outline-secondary">Turno actual</button>
-            </div>
-            <span id="tc-error-ventana" class="tc-error-ventana" role="alert"></span>
-        </form>
-
-        <div class="tc-ventana-resumen">
-            <span id="tc-chip-turno" class="tc-chip-turno">—</span>
-            <span id="tc-resumen-ventana" class="tc-resumen-ventana"></span>
-            <button type="button" id="tc-cambiar-ventana" class="btn btn-sm btn-link p-0" aria-expanded="false" aria-controls="tc-form-ventana">Cambiar</button>
+    @* ---- Encabezado: planta elegida (nombre completo) y resumen del turno. Se desplaza con la página. ---- *@
+    <section class="tc-portada" aria-labelledby="tc-planta-nombre">
+        <div class="tc-portada-titulo">
+            <p class="tc-sobretitulo">
+                <span id="tc-planta-cliente">Cargando…</span>
+                <span id="tc-planta-municipio" class="tc-municipio"></span>
+            </p>
+            <h1 id="tc-planta-nombre" class="tc-planta-nombre">&nbsp;</h1>
         </div>
 
-        <time id="tc-reloj" class="tc-reloj" aria-live="off" title="Hora del servidor (CDMX)">--:--:--</time>
+        @* Tarjetas de resumen: además de informar, filtran la tabla al hacer clic. *@
+        <div id="tc-resumen" class="tc-resumen" role="group" aria-label="Resumen y filtros rápidos">
+            <button type="button" class="tc-tarjeta-kpi activo" data-filtro="todos">
+                <span class="tc-kpi-etiqueta">Servicios</span><span class="tc-kpi-valor" data-kpi="todos">0</span>
+            </button>
+            <button type="button" class="tc-tarjeta-kpi tc-kpi-pendiente" data-filtro="pendientes">
+                <span class="tc-kpi-etiqueta">Pendientes</span><span class="tc-kpi-valor" data-kpi="pendientes">0</span>
+            </button>
+            <button type="button" class="tc-tarjeta-kpi tc-kpi-camino" data-filtro="camino">
+                <span class="tc-kpi-etiqueta">En camino</span><span class="tc-kpi-valor" data-kpi="camino">0</span>
+            </button>
+            <button type="button" class="tc-tarjeta-kpi tc-kpi-final" data-filtro="finalizados">
+                <span class="tc-kpi-etiqueta">Finalizados</span><span class="tc-kpi-valor" data-kpi="finalizados">0</span>
+            </button>
+            <button type="button" class="tc-tarjeta-kpi tc-kpi-incidencia" data-filtro="incidencia">
+                <span class="tc-kpi-etiqueta">Con incidencia</span><span class="tc-kpi-valor" data-kpi="incidencia">0</span>
+            </button>
+            <div class="tc-avance" aria-live="polite">
+                <div class="tc-avance-texto"><span>Avance del turno</span><strong id="tc-avance-porcentaje">0%</strong></div>
+                <div class="tc-avance-barra"><span id="tc-avance-relleno"></span></div>
+            </div>
+        </div>
     </section>
 
-    @* ---- Pestañas de planta: fijas al hacer scroll, con contador y reordenables arrastrando. ---- *@
-    <nav id="tc-pestanas" class="tc-pestanas" role="tablist" aria-label="Plantas"></nav>
-
-    @* ---- Herramientas: búsqueda, filtros rápidos, densidad y columnas visibles. ---- *@
-    <div class="tc-herramientas">
-        <label class="tc-buscar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-            <input type="search" id="tc-buscar" placeholder="Buscar ruta, unidad u operador" aria-label="Buscar" />
-        </label>
-        <div class="tc-filtros-rapidos" role="group" aria-label="Filtros rápidos">
-            <button type="button" class="tc-filtro activo" data-filtro="todos">Todos <span class="tc-cuenta" data-cuenta="todos"></span></button>
-            <button type="button" class="tc-filtro" data-filtro="pendientes">Pendientes <span class="tc-cuenta" data-cuenta="pendientes"></span></button>
-            <button type="button" class="tc-filtro" data-filtro="incidencia">Con incidencia <span class="tc-cuenta" data-cuenta="incidencia"></span></button>
-            <button type="button" class="tc-filtro" data-filtro="trayecto">En trayecto <span class="tc-cuenta" data-cuenta="trayecto"></span></button>
-        </div>
-        <div class="tc-herramientas-derecha">
-            <button type="button" id="tc-densidad" class="btn btn-sm tc-boton-barra" aria-pressed="false" title="Cambiar el alto de las filas">Compacto</button>
+    @* ---- Bloque fijo: se queda arriba al bajar por la tabla (pestañas, turno, búsqueda, acciones). ---- *@
+    <div id="tc-fijo" class="tc-fijo">
+        <div class="tc-fila-pestanas">
+            <nav id="tc-pestanas" class="tc-pestanas" role="tablist" aria-label="Plantas"></nav>
             <div class="dropdown">
-                <button type="button" class="btn btn-sm tc-boton-barra dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Columnas</button>
-                <div id="tc-menu-columnas" class="dropdown-menu dropdown-menu-end tc-menu-columnas"></div>
+                <button type="button" id="tc-boton-ocultas" class="tc-boton-suave" data-bs-toggle="dropdown" aria-expanded="false" hidden></button>
+                <div id="tc-menu-ocultas" class="dropdown-menu dropdown-menu-end tc-menu"></div>
+            </div>
+        </div>
+
+        <div class="tc-herramientas">
+            <div id="tc-turnos" class="tc-turnos" role="radiogroup" aria-label="Turno">
+                <span class="tc-turnos-indicador" aria-hidden="true"></span>
+            </div>
+            <label class="tc-dia" title="Día">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+                <input type="date" id="tc-dia" aria-label="Día" />
+            </label>
+            <label class="tc-buscar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+                <input type="search" id="tc-buscar" placeholder="Buscar ruta, unidad u operador" aria-label="Buscar" />
+                <kbd>/</kbd>
+            </label>
+
+            <div class="tc-herramientas-derecha">
+                <button type="button" id="tc-marcar-no-opero" class="tc-boton-suave tc-boton-alerta" hidden></button>
+                <button type="button" id="tc-ver-ocultas" class="tc-boton-suave" aria-pressed="false" hidden></button>
+                <button type="button" id="tc-densidad" class="tc-boton-suave" aria-pressed="false" title="Cambiar el alto de las filas">Compacto</button>
+                <div class="dropdown">
+                    <button type="button" class="tc-boton-suave dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Columnas</button>
+                    <div id="tc-menu-columnas" class="dropdown-menu dropdown-menu-end tc-menu"></div>
+                </div>
+                <span class="tc-reloj-caja" title="Hora del servidor (CDMX)">
+                    <span class="tc-punto-vivo" aria-hidden="true"></span>
+                    <time id="tc-reloj" class="tc-reloj">--:--:--</time>
+                </span>
             </div>
         </div>
     </div>
 
     <div id="tc-tabla" class="tc-tabla"></div>
-    <p id="tc-vacio" class="tc-vacio" hidden>No hay servicios de esta planta en la ventana elegida.</p>
+    <p id="tc-vacio" class="tc-vacio" hidden></p>
 
-    @* ---- Barra de estado, como en una hoja de cálculo. ---- *@
+    @* ---- Barra de estado (fija abajo) con barra de desplazamiento horizontal siempre a la mano. ---- *@
     <footer class="tc-barra-estado">
-        <span id="tc-resumen-tabla"></span>
-        <span id="tc-seleccion" class="tc-seleccion"></span>
-        <span class="tc-atajo">Flechas para moverte · Shift para seleccionar · Ctrl+C para copiar</span>
-        <span id="tc-estado" class="tc-estado" aria-live="polite"></span>
+        <div id="tc-scroll-horizontal" class="tc-scroll-horizontal" aria-hidden="true"><div></div></div>
+        <div class="tc-barra-estado-texto">
+            <span id="tc-seleccion" class="tc-seleccion"></span>
+            <span class="tc-atajo">Flechas para moverte · Shift para seleccionar · Ctrl+C para copiar · Clic en el número para elegir filas</span>
+            <span id="tc-estado" class="tc-estado" aria-live="polite"></span>
+        </div>
     </footer>
 </div>
 
-@* Ficha del operador (se abre con el ícono "i"). *@
+@* Ficha del operador (ícono "i"), editor de etiqueta de pestaña y confirmaciones. *@
 <div id="tc-ficha-operador" class="tc-ficha" role="dialog" aria-label="Datos del operador" hidden></div>
+<div id="tc-editor-pestana" class="tc-ficha tc-editor-pestana" role="dialog" aria-label="Etiqueta de la pestaña" hidden></div>
+<div id="tc-dialogo" class="tc-dialogo-fondo" hidden>
+    <div class="tc-dialogo" role="alertdialog" aria-modal="true" aria-labelledby="tc-dialogo-titulo" aria-describedby="tc-dialogo-texto">
+        <h2 id="tc-dialogo-titulo" class="tc-dialogo-titulo"></h2>
+        <p id="tc-dialogo-texto" class="tc-dialogo-texto"></p>
+        <div class="tc-dialogo-botones">
+            <button type="button" id="tc-dialogo-cancelar" class="tc-boton-suave">Cancelar</button>
+            <button type="button" id="tc-dialogo-aceptar" class="tc-boton-principal"></button>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script src="~/lib/tabulator/js/tabulator.min.js"></script>

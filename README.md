@@ -87,6 +87,11 @@ En Windows usan LocalDB sin configurar nada. En otro sistema, define la variable
 > En Linux o macOS no existe LocalDB. Ahí se usa SQL Server en Docker con la misma
 > migración; solo cambia la cadena de conexión que guardas en user-secrets.
 
+## Decisiones
+
+Lo acordado para cada pieza (turnos, mixtos, estatus, filtros, aforo, capturas…) está en
+[`docs/decisiones.md`](docs/decisiones.md).
+
 ## Configuración
 
 Las constantes de negocio viven en `appsettings.json`, en la sección `ReglasNegocio`:

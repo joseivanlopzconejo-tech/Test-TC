@@ -24,28 +24,40 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* ---- Tema oscuro (por defecto): pizarra azulada, poco contraste en lo secundario
-   y mucho en los datos, para 8 horas de trabajo nocturno sin cansar la vista. ---- */
+/* ---- Tema oscuro (por defecto): azul noche con acentos pastel. Lo secundario es tenue y los
+   datos resaltan; los pasteles distinguen estados sin cansar la vista en 8 horas de noche. ---- */
 :root,
 :root[data-bs-theme="dark"] {
-  --tc-fondo: #0b0f14;
-  --tc-superficie: #10151c;
-  --tc-superficie-2: #151b23;
-  --tc-superficie-3: #1b232e;
-  --tc-borde: #232c38;
-  --tc-borde-suave: #19212b;
-  --tc-texto: #e6ebf1;
-  --tc-texto-suave: #8a97a7;
-  --tc-texto-tenue: #5d6978;
-  --tc-acento: #3d9bff;
-  --tc-acento-texto: #04172b;
-  --tc-ok: #3ccf8e;
-  --tc-aviso: #f5b83d;
-  --tc-alerta: #ff6b61;
-  --tc-sin-accion: #6b7686;
-  --tc-mixto: #a78bfa;
-  --tc-sombra: 0 10px 30px rgba(0, 0, 0, .5);
-  --tc-radio: 10px;
+  --tc-fondo: #0e1220;
+  --tc-superficie: #151a2a;
+  --tc-superficie-2: #1a2134;
+  --tc-superficie-3: #222a40;
+  --tc-borde: #2a3350;
+  --tc-borde-suave: #1f2740;
+  --tc-texto: #e9ecf6;
+  --tc-texto-suave: #a3abc6;
+  --tc-texto-tenue: #6f789a;
+  --tc-acento: #a5b4fc;
+  --tc-acento-fuerte: #818cf8;
+  --tc-acento-texto: #0e1220;
+  /* Pasteles de estado (los mismos en ambos temas; cambia cómo se mezclan con el texto). */
+  --tc-menta: #9fe2bf;
+  --tc-cielo: #8ec5ff;
+  --tc-durazno: #ffc48c;
+  --tc-rosa: #f4a6a6;
+  --tc-mantequilla: #f6d88a;
+  --tc-lila: #cdb8f2;
+  --tc-ok: var(--tc-menta);
+  --tc-aviso: var(--tc-durazno);
+  --tc-alerta: var(--tc-rosa);
+  --tc-sin-accion: #6f789a;
+  --tc-mixto: var(--tc-lila);
+  /* Qué tanto del color pastel lleva el texto de un chip (en oscuro, casi todo). */
+  --tc-mezcla-chip: 92%;
+  --tc-fondo-chip: 18%;
+  --tc-sombra: 0 12px 32px rgba(3, 6, 18, .55);
+  --tc-sombra-suave: 0 2px 10px rgba(3, 6, 18, .35);
+  --tc-radio: 12px;
   --bs-body-bg: var(--tc-fondo);
   --bs-body-color: var(--tc-texto);
   --bs-border-color: var(--tc-borde);
@@ -54,25 +66,36 @@
   color-scheme: dark;
 }
 
-/* ---- Tema claro ---- */
+/* ---- Tema claro: blanco cálido con los mismos pasteles, más tenues de fondo y con texto
+   oscurecido para que se lea bien. ---- */
 :root[data-bs-theme="light"] {
-  --tc-fondo: #f5f7fa;
+  --tc-fondo: #f5f6fb;
   --tc-superficie: #ffffff;
-  --tc-superficie-2: #f8fafc;
-  --tc-superficie-3: #eef2f7;
-  --tc-borde: #e1e6ed;
-  --tc-borde-suave: #edf0f5;
-  --tc-texto: #111827;
-  --tc-texto-suave: #5b6573;
-  --tc-texto-tenue: #8d96a3;
-  --tc-acento: #1769e0;
+  --tc-superficie-2: #f8f9fd;
+  --tc-superficie-3: #eef1f8;
+  --tc-borde: #e2e6f0;
+  --tc-borde-suave: #edf0f6;
+  --tc-texto: #1d2335;
+  --tc-texto-suave: #5a6380;
+  --tc-texto-tenue: #8f97b0;
+  --tc-acento: #6366f1;
+  --tc-acento-fuerte: #4f46e5;
   --tc-acento-texto: #ffffff;
-  --tc-ok: #13895a;
-  --tc-aviso: #b26a00;
-  --tc-alerta: #d43c31;
-  --tc-sin-accion: #7b8594;
-  --tc-mixto: #6d43d9;
-  --tc-sombra: 0 10px 28px rgba(17, 24, 39, .12);
+  --tc-menta: #6fd3a3;
+  --tc-cielo: #6aaef5;
+  --tc-durazno: #f8ad69;
+  --tc-rosa: #ee8a8a;
+  --tc-mantequilla: #ecc35a;
+  --tc-lila: #b39ae8;
+  --tc-ok: #1f9d68;
+  --tc-aviso: #c87420;
+  --tc-alerta: #d0504f;
+  --tc-sin-accion: #8f97b0;
+  --tc-mixto: #7c5cd6;
+  --tc-mezcla-chip: 48%;
+  --tc-fondo-chip: 24%;
+  --tc-sombra: 0 12px 30px rgba(29, 35, 53, .12);
+  --tc-sombra-suave: 0 2px 8px rgba(29, 35, 53, .06);
   --bs-body-bg: var(--tc-fondo);
   --bs-body-color: var(--tc-texto);
   --bs-border-color: var(--tc-borde);
@@ -229,6 +252,22 @@ body {
 
 .tc-toast-exito { border-left-color: var(--tc-ok); }
 .tc-toast-error { border-left-color: var(--tc-alerta); }
+
+.tc-toast {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  pointer-events: auto;
+}
+
+.tc-toast button {
+  border: none;
+  background: transparent;
+  color: var(--tc-acento);
+  font-weight: 650;
+  font-size: .85rem;
+  padding: 0;
+}
 
 @keyframes tc-entrar {
   from { opacity: 0; transform: translateY(6px); }
