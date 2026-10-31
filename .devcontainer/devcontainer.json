@@ -13,15 +13,13 @@
   // Cada vez que el Codespace arranca: levanta la app en segundo plano.
   "postStartCommand": "bash .devcontainer/iniciar.sh",
 
-  // El puerto de la app se reenvía desde el inicio (como en las plantillas oficiales). Funciona
-  // porque la app comparte la red del contenedor de la base (ver docker-compose.yml).
-  "forwardPorts": [5178],
+  // Puerto de la app: 3000. Configuración mínima a propósito (solo el nombre): GitHub lo detecta
+  // y lo reenvía cuando la app ya escucha. Así quedó comprobado que funciona en Codespaces; el
+  // 5178 anterior quedó dañado en un Codespace (GitHub guarda el estado de cada puerto y eso
+  // sobrevive a las reconstrucciones), por eso se cambió de número.
   "portsAttributes": {
-    "5178": {
-      "label": "Torre de Control",
-      // La app habla HTTP dentro del Codespace; GitHub pone el HTTPS hacia afuera.
-      "protocol": "http",
-      "onAutoForward": "openBrowser"
+    "3000": {
+      "label": "Torre de Control"
     }
   },
 

@@ -3,7 +3,7 @@
 # Para verla trabajar:  tail -f /tmp/torre-control.log
 set -uo pipefail
 
-PUERTO=5178
+PUERTO=3000
 
 # ¿Ya hay algo escuchando en el puerto? Se revisa el PUERTO y no el nombre del proceso, porque
 # la extensión de C# del editor también tiene procesos con el nombre del proyecto.

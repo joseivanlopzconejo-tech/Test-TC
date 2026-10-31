@@ -6,7 +6,7 @@
 # Si algo falla, muestra el error de la bitácora.
 set -uo pipefail
 
-PUERTO=5178
+PUERTO=3000
 
 if [ "${1:-}" = "--reiniciar-datos" ]; then
   echo "Borrando la base de datos de ejemplo (se vuelve a crear al arrancar)..."
@@ -21,7 +21,7 @@ BITACORA=/tmp/torre-control.log
 codigo() { curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://$1:$PUERTO/Cuenta/Login"; }
 
 if [ "$(codigo 127.0.0.1)" != "200" ]; then
-  # Solo la app de ESTE puerto: otras copias (por ejemplo, una de prueba en el 3000) no se tocan.
+  # Solo la app de ESTE puerto: otras copias (por ejemplo, una de prueba en otro puerto) no se tocan.
   echo "Deteniendo la versión anterior de la app en el puerto $PUERTO..."
   pkill -f -- "--urls http.*:$PUERTO" 2>/dev/null
   sleep 2
