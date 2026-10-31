@@ -204,17 +204,31 @@ public partial class AppDbContext(
     /// </summary>
     private static void SembrarCatalogos(ModelBuilder builder)
     {
+        // Estatus que se eligen en los filtros, en tonos pastel (fáciles de distinguir y que no
+        // cansan la vista). El Id 3 era "Finalizado": ese estado ahora se calcula (En planta /
+        // Resguardo), así que se reutiliza. En la Fase 3 este catálogo será editable.
         builder.Entity<EstatusUnidad>().HasData(
-            new EstatusUnidad { Id = 1, Nombre = "Apagada", Color = "#D64545" },
-            new EstatusUnidad { Id = 2, Nombre = "Trayecto", Color = "#E0B020" },
-            new EstatusUnidad { Id = 3, Nombre = "Finalizado", Color = "#2E9E5B" });
+            new EstatusUnidad { Id = 1, Nombre = "Apagada", Color = "#F4A6A6" },
+            new EstatusUnidad { Id = 2, Nombre = "Trayecto", Color = "#F6D88A" },
+            new EstatusUnidad { Id = 3, Nombre = "Encendida", Color = "#B5E8B0" },
+            new EstatusUnidad { Id = 4, Nombre = "En base", Color = "#D9C3A5" },
+            new EstatusUnidad { Id = 5, Nombre = "Detenida", Color = "#CDB8F2" },
+            new EstatusUnidad { Id = 6, Nombre = "Pérdida de cobertura", Color = "#C8D0DA" },
+            new EstatusUnidad { Id = 7, Nombre = "Falla GPS", Color = "#A7B1BE" },
+            new EstatusUnidad { Id = 8, Nombre = "Sin respuesta del operador", Color = "#F2A27E" },
+            new EstatusUnidad { Id = 9, Nombre = "Falla mecánica", Color = "#E89393" });
 
+        // Motivos de retraso que se piden al capturar una llegada tarde.
         builder.Entity<TipoIncidencia>().HasData(
             new TipoIncidencia { Id = 1, Nombre = "Tráfico" },
             new TipoIncidencia { Id = 2, Nombre = "Falla mecánica" },
             new TipoIncidencia { Id = 3, Nombre = "Operador" },
-            new TipoIncidencia { Id = 4, Nombre = "Cliente" },
-            new TipoIncidencia { Id = 5, Nombre = "Otro" });
+            new TipoIncidencia { Id = 4, Nombre = "Cliente / planta" },
+            new TipoIncidencia { Id = 5, Nombre = "Otro" },
+            new TipoIncidencia { Id = 6, Nombre = "Cruce de tren" },
+            new TipoIncidencia { Id = 7, Nombre = "Accidente vial" },
+            new TipoIncidencia { Id = 8, Nombre = "Bloqueo o manifestación" },
+            new TipoIncidencia { Id = 9, Nombre = "Clima" });
 
         // Los roles son parte del sistema (no datos de ejemplo). El ConcurrencyStamp es fijo
         // porque HasData necesita valores que no cambien entre una migración y otra.

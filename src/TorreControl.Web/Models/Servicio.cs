@@ -4,7 +4,8 @@ namespace TorreControl.Web.Models;
 
 /// <summary>
 /// Una sola corrida de una Ruta: un día y un turno. Si una ruta corre 30 días, son 30 Servicios.
-/// Es la fila de la tabla del monitorista.
+/// Es la fila de la tabla del monitorista. Su estatus (En ruta, En planta...) NO se guarda:
+/// lo calcula EstatusServicio a partir de los filtros y las horas reales.
 /// </summary>
 public class Servicio
 {
@@ -35,10 +36,6 @@ public class Servicio
     public int HirModificaciones { get; set; }
     public int HtrModificaciones { get; set; }
 
-    // null = "Sin acción".
-    public int? EstatusId { get; set; }
-    public EstatusUnidad? Estatus { get; set; }
-
     // null = todavía no se captura. El rango real (0..AforoMax) se valida en el servicio de negocio
     // porque el máximo viene de configuración.
     public int? Aforo { get; set; }
@@ -51,6 +48,14 @@ public class Servicio
 
     // Servicio agregado a mano por un supervisor (especial, 12x12...) en vez de la programación base.
     public bool EsEspecial { get; set; }
+
+    // MIXTO lo decide el supervisor al dar de alta el servicio (no se calcula por horario).
+    // Los mixtos de una planta se muestran en su propia pestaña ("PLANTA MIXTO").
+    public bool EsMixto { get; set; }
+
+    // "No operó hoy": el monitorista ocultó la fila porque el servicio no se activó.
+    // Lo ven todos, sale de los reportes y se puede revertir (quién y cuándo queda en Auditoría).
+    public bool NoOpero { get; set; }
 
     // null = lo generó el sistema (programación base o datos de ejemplo), no una persona.
     public int? CreadoPorId { get; set; }

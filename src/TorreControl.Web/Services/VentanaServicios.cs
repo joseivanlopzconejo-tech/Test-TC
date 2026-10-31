@@ -27,17 +27,19 @@ public class VentanaServicios(IOptions<ReglasNegocioOptions> opciones)
         return (inicio, fin);
     }
 
-    /// <summary>Ventana por defecto: el turno en curso según la hora del servidor.</summary>
-    public (DateOnly Dia, TimeOnly Desde, TimeOnly Hasta) VentanaDelTurnoActual(DateTime ahora)
+    /// <summary>Turno completo del día elegido. Turnos fijos: 1º 00–08, 2º 08–16, 3º 16–24.</summary>
+    /// <param name="turno">1, 2 o 3; 0 = el día completo.</param>
+    public (DateTime Desde, DateTime Hasta) VentanaDeTurno(DateOnly dia, int turno)
     {
-        var hora = ahora.Hour;
-        var (desde, hasta) = hora < _o.HoraInicioTurno2
-            ? (0, _o.HoraInicioTurno2)
-            : hora < _o.HoraInicioTurno3
-                ? (_o.HoraInicioTurno2, _o.HoraInicioTurno3)
-                : (_o.HoraInicioTurno3, 0);
-
-        return (DateOnly.FromDateTime(ahora), new TimeOnly(desde, 0), new TimeOnly(hasta, 0));
+        var medianoche = dia.ToDateTime(TimeOnly.MinValue);
+        return turno switch
+        {
+            1 => (medianoche, medianoche.AddHours(_o.HoraInicioTurno2)),
+            2 => (medianoche.AddHours(_o.HoraInicioTurno2), medianoche.AddHours(_o.HoraInicioTurno3)),
+            3 => (medianoche.AddHours(_o.HoraInicioTurno3), medianoche.AddDays(1)),
+            0 => (medianoche, medianoche.AddDays(1)),
+            _ => throw new ArgumentOutOfRangeException(nameof(turno), "El turno debe ser 0 (día), 1, 2 o 3.")
+        };
     }
 
     /// <summary>

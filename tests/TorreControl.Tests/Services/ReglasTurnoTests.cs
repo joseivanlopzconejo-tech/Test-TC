@@ -35,16 +35,4 @@ public class ReglasTurnoTests
 
         Assert.Equal(new DateTime(2026, 3, 10, 6, 50, 0), fin);
     }
-
-    [Theory]
-    [InlineData("07:05", "08:15", true)]  // cruza el cambio de 1er a 2º turno
-    [InlineData("15:05", "16:15", true)]  // cruza de 2º a 3º
-    [InlineData("23:05", "00:15", true)]  // cruza la medianoche (3º a 1º)
-    [InlineData("05:30", "06:50", false)] // todo dentro del 1er turno
-    [InlineData("16:00", "17:10", false)] // sale justo al iniciar el 3º: no cruza nada
-    [InlineData("06:50", "08:00", false)] // llega justo en el cambio: no es mixto
-    public void EsMixto_DetectaElCruceDeTurno(string hip, string htp, bool esperado)
-    {
-        Assert.Equal(esperado, _reglas.EsMixto(Dia, TimeOnly.Parse(hip), TimeOnly.Parse(htp)));
-    }
 }

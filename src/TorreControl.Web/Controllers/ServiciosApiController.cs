@@ -1,19 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TorreControl.Web.Data;
+using TorreControl.Web.Models.ViewModels;
 using TorreControl.Web.Security;
-using TorreControl.Web.Services;
 
 namespace TorreControl.Web.Controllers;
 
 /// <summary>
-/// Datos de servicios en JSON para la tabla del monitorista (la tabla llega en la Fase 2).
-/// Toda acción que recibe un id revisa primero que la planta sea del usuario.
+/// Acciones sobre servicios. Toda acción que recibe un id revisa primero que la planta sea del
+/// usuario (anti-IDOR); los POST además exigen el token antiforgery (filtro global).
 /// </summary>
 [ApiController]
 [Route("api/servicios")]
-public class ServiciosApiController(AppDbContext db, AccesoPlantas acceso, ReglasTurno turnos) : ControllerBase
+public class ServiciosApiController(AppDbContext db, AccesoPlantas acceso) : ControllerBase
 {
+    // Tope de servicios por petición: suficiente para una planta completa y evita abusos.
+    private const int MaxIdsPorPeticion = 200;
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Detalle(int id)
     {
@@ -30,7 +33,8 @@ public class ServiciosApiController(AppDbContext db, AccesoPlantas acceso, Regla
                 s.Fecha,
                 s.Turno,
                 s.Hip,
-                s.Htp
+                s.Htp,
+                s.EsMixto
             })
             .SingleOrDefaultAsync();
 
@@ -51,7 +55,39 @@ public class ServiciosApiController(AppDbContext db, AccesoPlantas acceso, Regla
             servicio.Turno,
             Hip = servicio.Hip.ToString("HH:mm"),
             Htp = servicio.Htp.ToString("HH:mm"),
-            EsMixto = turnos.EsMixto(servicio.Fecha, servicio.Hip, servicio.Htp)
+            servicio.EsMixto
         });
+    }
+
+    /// <summary>
+    /// Marca uno o varios servicios como "no operó hoy" (o los reactiva). La Auditoría guarda
+    /// quién y cuándo, por eso no hace falta una columna extra.
+    /// </summary>
+    [HttpPost("no-opero")]
+    public async Task<IActionResult> NoOpero(NoOperoPeticion peticion)
+    {
+        var ids = peticion.Ids.Distinct().ToList();
+        if (ids.Count is 0 or > MaxIdsPorPeticion)
+        {
+            return Problem($"Envía entre 1 y {MaxIdsPorPeticion} servicios.", statusCode: 400);
+        }
+
+        var servicios = await db.Servicios
+            .Include(s => s.Ruta)
+            .Where(s => ids.Contains(s.Id))
+            .ToListAsync();
+
+        // Todo o nada: si alguno no existe o es de una planta ajena, no se toca ninguno y se
+        // responde igual que "no existe" (no se revela cuál falló).
+        var permitidas = await acceso.PlantasPermitidasAsync(User);
+        if (servicios.Count != ids.Count || servicios.Any(s => !permitidas.Contains(s.Ruta!.PlantaId)))
+        {
+            return NotFound();
+        }
+
+        servicios.ForEach(s => s.NoOpero = peticion.NoOpero);
+        await db.SaveChangesAsync();
+
+        return Ok(new { actualizados = servicios.Count });
     }
 }

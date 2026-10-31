@@ -34,53 +34,60 @@ public class DatosEjemplo(
         ("LMB", "Lumbra Electrodomésticos")
     ];
 
-    // (cliente, planta, municipio, hora de inicio del 1er turno de la planta)
-    // Unas plantas cambian de turno a las 7, 15 y 23 h y otras a las 6, 14 y 22 h; así hay
-    // servicios de salida que cruzan el cambio de turno de la torre (MIXTOS) y otros que no.
-    private static readonly (string Cliente, string Planta, string Municipio, int HoraTurno)[] Plantas =
+    // Hora de inicio del 1er turno de cada planta: unas cambian a las 7, 15 y 23 h y otras a las
+    // 6, 14 y 22 h, como en la realidad. "Rutas" = rutas normales; "Mixtas" = rutas 12x12 (16:00
+    // a 04:00) que el supervisor marca como MIXTO y van en su propia pestaña.
+    private static readonly (string Cliente, string Planta, string Corto, string Municipio, int HoraTurno, int Rutas, int Mixtas)[] Plantas =
     [
-        ("NVA", "Norvial Silao", "Silao", 7),
-        ("NVA", "Norvial Irapuato", "Irapuato", 6),
-        ("QTK", "Quimtek Salamanca", "Salamanca", 7),
-        ("QTK", "Quimtek León", "León", 6),
-        ("LMB", "Lumbra Celaya", "Celaya", 7),
-        ("LMB", "Lumbra Guanajuato", "Guanajuato", 6)
+        ("NVA", "Norvial Silao", "NORVIAL SLO", "Silao", 7, 15, 2),
+        ("NVA", "Norvial Irapuato", "NORVIAL IRA", "Irapuato", 6, 13, 0),
+        ("QTK", "Quimtek Salamanca", "QUIMTEK SAL", "Salamanca", 7, 14, 3),
+        ("QTK", "Quimtek León", "QUIMTEK LEÓN", "León", 6, 12, 0),
+        ("LMB", "Lumbra Celaya", "LUMBRA CEL", "Celaya", 7, 16, 2),
+        ("LMB", "Lumbra Guanajuato", "LUMBRA GTO", "Guanajuato", 6, 12, 0)
     ];
 
-    // Dos rutas por planta (en el mismo orden que Plantas); cada una existe como E y como S.
+    // Nombres de ruta inventados (colonias genéricas). Cada planta toma un tramo distinto.
     private static readonly string[] NombresRuta =
     [
-        "Centro", "Las Arboledas", "San Nicolás", "Valle Verde", "Los Olivos", "Santa Fe",
-        "El Mirador", "La Cantera", "Jardines", "Puerta Real", "Las Huertas", "Villa del Sol"
+        "Centro", "Las Arboledas", "San Nicolás", "Valle Verde", "Los Olivos", "Santa Fe", "El Mirador",
+        "La Cantera", "Jardines", "Puerta Real", "Las Huertas", "Villa del Sol", "Los Pinos", "El Roble",
+        "La Joya", "San Miguel", "Lomas del Río", "El Sauz", "La Presa", "Las Palmas", "Arroyo Seco",
+        "Real del Bosque", "Los Ángeles", "El Carmen", "San Isidro", "La Loma", "Valle Dorado",
+        "Campo Verde", "Las Flores", "El Llano", "Rancho Nuevo", "Tres Cruces", "La Estancia",
+        "Buenavista", "El Encino", "Santa Rita", "Los Fresnos", "Monte Alto", "La Ermita", "Nueva Era",
+        "El Pedregal", "Las Teresas", "San Pablo", "Los Laureles", "El Molino", "Prados del Sur"
     ];
 
-    private static readonly string[] NombresOperador =
-    [
-        "Raúl Ibarra", "Martín Cisneros", "Jorge Valdés", "Sergio Robles", "Hugo Navarro", "Iván Duarte",
-        "Óscar Lara", "Felipe Arriaga", "Ramón Tapia", "Emilio Paredes", "Diego Quiroz", "Javier Solís"
-    ];
+    private static readonly string[] Nombres =
+        ["Raúl", "Martín", "Jorge", "Sergio", "Hugo", "Iván", "Óscar", "Felipe", "Ramón", "Emilio", "Diego", "Javier"];
 
-    // Ids fijos de los catálogos que vienen en la migración.
-    private const int Apagada = 1, Trayecto = 2, Finalizado = 3;
+    private static readonly string[] Apellidos =
+        ["Ibarra", "Cisneros", "Valdés", "Robles", "Navarro", "Duarte", "Lara", "Arriaga", "Tapia", "Paredes"];
+
+    // Ids fijos del catálogo de estatus que viene en la migración.
+    private const int Apagada = 1, Trayecto = 2, Encendida = 3, EnBase = 4, SinRespuesta = 8, PerdidaCobertura = 6;
 
     // Minutos de diferencia simulados: la mayoría a tiempo, algunos tarde y pocos muy tarde.
-    private static readonly int[] Diferencias = [-4, -2, -1, 0, 0, 1, 2, 3, 4, 5, 6, 8, 9, 12, 16, 24];
+    private static readonly int[] Diferencias = [-4, -2, -1, 0, 0, 0, 1, 2, 3, 4, 5, 6, 8, 9, 12, 16, 24];
 
     private static readonly (int TipoId, string Tipo, string Motivo)[] Motivos =
     [
         (1, "Tráfico", "carga vehicular en el acceso a la autopista"),
         (1, "Tráfico", "cierre parcial por obra en el bulevar"),
-        (2, "Falla mecánica", "revisión de frenos antes de salir"),
-        (3, "Operador", "relevo de operador en la base"),
-        (4, "Cliente", "la planta retrasó la salida del personal")
+        (6, "Cruce de tren", "tren detenido sobre la vía en el cruce"),
+        (7, "Accidente vial", "choque en el carril de baja velocidad"),
+        (2, "Falla mecánica", "revisión de frenos en el trayecto"),
+        (4, "Cliente / planta", "la planta retrasó el acceso de la unidad")
     ];
 
-    private static readonly string[] ObservacionesFiltro =
+    private static readonly (int Estatus, string Observacion)[][] CapturasFiltro =
     [
-        "Operador confirma unidad en base.",
-        "Unidad lista para salir.",
-        "Operador en camino al primer punto.",
-        "Sin respuesta del operador, se reintenta."
+        // F1, F2, F3: lo típico conforme se acerca la hora de salida.
+        [(Apagada, "Operador confirma unidad en base."), (Encendida, "Unidad encendida, operador revisando."), (SinRespuesta, "Sin respuesta del operador, se reintenta.")],
+        [(Encendida, "Unidad encendida."), (EnBase, "Unidad lista en patio."), (PerdidaCobertura, "GPS sin reporte, se confirma por llamada.")],
+        [(EnBase, "Lista para salir."), (Trayecto, "Operador en camino al primer punto.")],
+        [(Trayecto, "Unidad en trayecto al primer punto.")]
     ];
 
     private static readonly (string Numero, string Nombre, string Rol, int? Modulo)[] UsuariosDemo =
@@ -119,12 +126,15 @@ public class DatosEjemplo(
         {
             Cliente = clientes[p.Cliente],
             Nombre = p.Planta,
+            NombreCorto = p.Corto,
             Municipio = p.Municipio
         }).ToList();
 
         for (var i = 0; i < plantas.Count; i++)
         {
-            foreach (var nombre in NombresRuta.Skip(i * 2).Take(2))
+            var definicion = Plantas[i];
+            var nombres = NombresRuta.Skip(i * 5).Concat(NombresRuta).Take(definicion.Rutas + definicion.Mixtas);
+            foreach (var nombre in nombres)
             {
                 plantas[i].Rutas.Add(new Ruta { NombreRuta = nombre, TipoServicio = TipoServicio.E });
                 plantas[i].Rutas.Add(new Ruta { NombreRuta = nombre, TipoServicio = TipoServicio.S });
@@ -132,11 +142,11 @@ public class DatosEjemplo(
         }
 
         db.Plantas.AddRange(plantas);
-        db.Unidades.AddRange(Enumerable.Range(1, 40).Select(n => new Unidad { Numero = (1100 + n).ToString() }));
-        db.Operadores.AddRange(NombresOperador.Select((nombre, i) => new Operador
+        db.Unidades.AddRange(Enumerable.Range(1, 150).Select(n => new Unidad { Numero = (1100 + n).ToString() }));
+        db.Operadores.AddRange(Enumerable.Range(0, 40).Select(i => new Operador
         {
             Clave = $"OP-{i + 1:000}",
-            Nombre = nombre,
+            Nombre = $"{Nombres[i % Nombres.Length]} {Apellidos[(i * 7) % Apellidos.Length]}",
             Supervisor = i % 2 == 0 ? "Supervisor Demo Norte" : "Supervisor Demo Sur",
             Coordinador = "Coordinación Demo"
         }));
@@ -194,8 +204,10 @@ public class DatosEjemplo(
     }
 
     /// <summary>
-    /// Por cada turno de la planta: un servicio de entrada que llega 10 min antes del cambio y uno
-    /// de salida que sale 5 min después. La salida del turno nocturno cruza la medianoche.
+    /// Servicios de un día. Rutas normales: por cada turno de la planta en que corre, una entrada
+    /// que llega ~10 min antes del cambio y una salida ~5 min después (la del turno nocturno cruza
+    /// la medianoche). Rutas mixtas (12x12, de 16:00 a 04:00): entrada 14:30 y salida 04:05, marcadas
+    /// como MIXTO.
     /// </summary>
     private async Task SembrarServiciosAsync(DateOnly dia)
     {
@@ -207,51 +219,74 @@ public class DatosEjemplo(
         var rutas = await db.Rutas.Include(r => r.Planta).OrderBy(r => r.Id).ToListAsync();
         var unidades = await db.Unidades.OrderBy(u => u.Id).Select(u => u.Id).ToListAsync();
         var operadores = await db.Operadores.OrderBy(o => o.Id).Select(o => o.Id).ToListAsync();
-        var horaTurnoPorPlanta = Plantas.ToDictionary(p => p.Planta, p => p.HoraTurno);
+        var definiciones = Plantas.ToDictionary(p => p.Planta);
         var capturista = (await usuarios.FindByNameAsync("900005"))?.Id;
         var ahora = reloj.Ahora();
         // Semilla fija por día: los datos simulados salen iguales cada vez que se regeneran.
         var azar = new Random(dia.DayNumber);
         var contador = 0;
 
-        foreach (var ruta in rutas)
+        foreach (var grupo in rutas.GroupBy(r => r.Planta!.Nombre))
         {
-            var primerTurno = horaTurnoPorPlanta.GetValueOrDefault(ruta.Planta!.Nombre, 7);
+            var definicion = definiciones[grupo.Key];
+            var nombres = grupo.Select(r => r.NombreRuta).Distinct().ToList();
 
-            foreach (var cambio in new[] { primerTurno, primerTurno + 8, primerTurno + 16 })
+            for (var i = 0; i < nombres.Count; i++)
             {
-                var cambioDeTurno = new TimeOnly(cambio % 24, 0);
-                var (hip, htp) = ruta.TipoServicio == TipoServicio.E
-                    ? (cambioDeTurno.AddMinutes(-90), cambioDeTurno.AddMinutes(-10))
-                    : (cambioDeTurno.AddMinutes(5), cambioDeTurno.AddMinutes(75));
+                var entrada = grupo.Single(r => r.NombreRuta == nombres[i] && r.TipoServicio == TipoServicio.E);
+                var salida = grupo.Single(r => r.NombreRuta == nombres[i] && r.TipoServicio == TipoServicio.S);
+                // Cada ruta sale a una hora un poco distinta, como en la realidad (no todas a la vez).
+                var desfase = (i % 7 - 3) * 5;
+                var esMixta = i >= definicion.Rutas;
 
-                var servicio = new Servicio
+                if (esMixta)
                 {
-                    Ruta = ruta,
-                    Fecha = dia,
-                    Hip = hip,
-                    Htp = htp,
-                    Turno = turnos.TurnoDe(hip),
-                    UnidadTitularId = unidades[contador % unidades.Count],
-                    OperadorId = operadores[contador % operadores.Count]
-                };
-
-                // Los filtros solo existen para servicios de entrada.
-                if (ruta.TipoServicio == TipoServicio.E)
-                {
-                    servicio.Filtros = filtros.HorasProgramadas(dia, hip)
-                        .Select(f => new Filtro { NumeroFiltro = f.NumeroFiltro, HoraProgramada = f.HoraProgramada })
-                        .ToList();
+                    Agregar(entrada, new TimeOnly(14, 30).AddMinutes(desfase), 80, esMixto: true);
+                    Agregar(salida, new TimeOnly(4, 5).AddMinutes(Math.Abs(desfase)), 70, esMixto: true);
+                    continue;
                 }
 
-                SimularCapturas(servicio, ahora, azar, capturista, unidades, contador);
-                db.Servicios.Add(servicio);
-                contador++;
+                // Todas corren el 1º y 2º turno de la planta; una de cada tres también el nocturno.
+                var turnosDePlanta = i % 3 == 2 ? new[] { 0, 1, 2 } : [0, 1];
+                foreach (var t in turnosDePlanta)
+                {
+                    var cambio = new TimeOnly((definicion.HoraTurno + t * 8) % 24, 0);
+                    var fin = new TimeOnly((definicion.HoraTurno + t * 8 + 8) % 24, 0);
+                    Agregar(entrada, cambio.AddMinutes(-90 + desfase), 80 - Math.Abs(desfase), esMixto: false);
+                    Agregar(salida, fin.AddMinutes(5 + Math.Abs(desfase)), 70, esMixto: false);
+                }
             }
         }
 
         await db.SaveChangesAsync();
         logger.LogInformation("Datos de ejemplo: {Cantidad} servicios creados para el {Dia}.", contador, dia);
+
+        void Agregar(Ruta ruta, TimeOnly hip, int duracionMin, bool esMixto)
+        {
+            var servicio = new Servicio
+            {
+                Ruta = ruta,
+                Fecha = dia,
+                Hip = hip,
+                Htp = hip.AddMinutes(duracionMin),
+                Turno = turnos.TurnoDe(hip),
+                EsMixto = esMixto,
+                UnidadTitularId = unidades[contador % unidades.Count],
+                OperadorId = operadores[contador % operadores.Count]
+            };
+
+            // Los filtros solo existen para servicios de entrada.
+            if (ruta.TipoServicio == TipoServicio.E)
+            {
+                servicio.Filtros = filtros.HorasProgramadas(dia, hip)
+                    .Select(f => new Filtro { NumeroFiltro = f.NumeroFiltro, HoraProgramada = f.HoraProgramada })
+                    .ToList();
+            }
+
+            SimularCapturas(servicio, ahora, azar, capturista, unidades, contador);
+            db.Servicios.Add(servicio);
+            contador++;
+        }
     }
 
     /// <summary>
@@ -263,6 +298,9 @@ public class DatosEjemplo(
     {
         var (salida, llegada) = ReglasTurno.Intervalo(s.Fecha, s.Hip, s.Htp);
 
+        // Uno de cada 30 servicios "no operó" ese día (para probar las filas ocultas).
+        s.NoOpero = indice % 30 == 7;
+
         // Filtros ya vencidos: casi todos capturados; uno de cada ocho quedó "Sin acción".
         foreach (var filtro in s.Filtros.Where(f => f.HoraProgramada <= ahora))
         {
@@ -271,8 +309,8 @@ public class DatosEjemplo(
                 continue;
             }
 
-            var estatus = filtro.NumeroFiltro <= 2 ? Apagada : Trayecto;
-            var observacion = ObservacionesFiltro[azar.Next(ObservacionesFiltro.Length)];
+            var opciones = CapturasFiltro[filtro.NumeroFiltro - 1];
+            var (estatus, observacion) = opciones[azar.Next(opciones.Length)];
             var capturadoEn = filtro.HoraProgramada.AddMinutes(-azar.Next(1, 12));
 
             // El Filtro 4 se captura como "modificaciones" (necesitan un usuario que las firme).
@@ -293,22 +331,25 @@ public class DatosEjemplo(
             }
         }
 
-        // De vez en cuando, una unidad de apoyo.
+        // De vez en cuando, unidades de apoyo.
         if (indice % 11 == 3)
         {
             s.UnidadesApoyo.Add(new UnidadApoyo { UnidadId = unidades[(indice + 17) % unidades.Count], Orden = 1 });
+            if (indice % 22 == 3)
+            {
+                s.UnidadesApoyo.Add(new UnidadApoyo { UnidadId = unidades[(indice + 41) % unidades.Count], Orden = 2 });
+            }
         }
 
-        if (salida > ahora)
+        if (s.NoOpero || salida > ahora)
         {
             return;
         }
 
-        var retrasoInicio = Diferencias[azar.Next(Diferencias.Length)];
-        s.Hir = salida.AddMinutes(retrasoInicio);
+        // La hora de inicio ya no lleva observación (decisión del 31/10/2026); el estatus pasa a
+        // "En ruta" / "En salida" solo con tener Hir.
+        s.Hir = salida.AddMinutes(Diferencias[azar.Next(Diferencias.Length)]);
         s.HirModificaciones = 1;
-        s.EstatusId = Trayecto;
-        s.Incidencias.Add(Incidencia(MomentoIncidencia.Inicio, retrasoInicio, azar));
 
         if (llegada > ahora)
         {
@@ -318,27 +359,31 @@ public class DatosEjemplo(
         var retrasoLlegada = Diferencias[azar.Next(Diferencias.Length)];
         s.Htr = llegada.AddMinutes(retrasoLlegada);
         s.HtrModificaciones = 1;
-        s.EstatusId = Finalizado;
         s.Aforo = azar.Next(18, 46);
-        s.Incidencias.Add(Incidencia(MomentoIncidencia.Llegada, retrasoLlegada, azar));
+        if (Incidencia(retrasoLlegada, azar) is { } incidencia)
+        {
+            s.Incidencias.Add(incidencia);
+        }
     }
 
-    private Incidencia Incidencia(MomentoIncidencia momento, int minutos, Random azar)
+    /// <summary>
+    /// Solo una llegada con más de ToleranciaMin de retraso genera incidencia (motivo + observación).
+    /// A tiempo no se escribe nada: la columna Observaciones queda limpia.
+    /// </summary>
+    private Incidencia? Incidencia(int minutos, Random azar)
     {
-        // Misma escalera de tolerancia que la regla real: dentro de tolerancia (o un adelanto
-        // pequeño) = "sin novedad"; si no, incidencia con tipo y motivo.
         if (minutos <= reglas.Value.ToleranciaMin)
         {
-            return new Incidencia { Momento = momento, EsSinNovedad = true, Texto = TextosIncidencia.SinNovedad(momento) };
+            return null;
         }
 
         var (tipoId, tipo, motivo) = Motivos[azar.Next(Motivos.Length)];
         return new Incidencia
         {
-            Momento = momento,
+            Momento = MomentoIncidencia.Llegada,
             TipoIncidenciaId = tipoId,
             Motivo = motivo,
-            Texto = TextosIncidencia.ConIncidente(momento, tarde: minutos > 0, tipo, motivo)
+            Texto = TextosIncidencia.ConIncidente(MomentoIncidencia.Llegada, tarde: true, tipo, motivo)
         };
     }
 }

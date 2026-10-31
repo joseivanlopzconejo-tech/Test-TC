@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -28,6 +29,8 @@ public partial class AppConBaseDatos : WebApplicationFactory<Program>, IAsyncLif
 
     public int ServicioPlantaA { get; private set; }
     public int ServicioPlantaB { get; private set; }
+    public int ServicioMixtoA { get; private set; }
+    public int ServicioSalidaA { get; private set; }
 
     // Límite de intentos por IP; una prueba lo baja para comprobar el 429.
     protected virtual int LoginPeticionesPorIp => 1000;
@@ -67,20 +70,26 @@ public partial class AppConBaseDatos : WebApplicationFactory<Program>, IAsyncLif
         await Crear(Inactivo, Roles.Monitorista, activo: false);
 
         var cliente = new Cliente { Codigo = "PRB", Nombre = "Cliente de prueba" };
-        var plantaA = new Planta { Cliente = cliente, Nombre = "Planta A", Municipio = "Silao" };
+        var plantaA = new Planta { Cliente = cliente, Nombre = "Planta A", NombreCorto = "PLANTA A", Municipio = "Silao" };
         var plantaB = new Planta { Cliente = cliente, Nombre = "Planta B", Municipio = "León" };
         var hoy = DateOnly.FromDateTime(DateTime.UtcNow);
         var servicioA = new Servicio { Ruta = new Ruta { Planta = plantaA, NombreRuta = "Centro", TipoServicio = TipoServicio.E }, Fecha = hoy, Turno = 1, Hip = new(5, 30), Htp = new(6, 50) };
         var servicioB = new Servicio { Ruta = new Ruta { Planta = plantaB, NombreRuta = "Norte", TipoServicio = TipoServicio.E }, Fecha = hoy, Turno = 1, Hip = new(5, 30), Htp = new(6, 50) };
+        // Salida de la planta A en el 2º turno y un servicio MIXTO (va en la pestaña "PLANTA A MIXTO").
+        var salidaA = new Servicio { Ruta = new Ruta { Planta = plantaA, NombreRuta = "Centro", TipoServicio = TipoServicio.S }, Fecha = hoy, Turno = 2, Hip = new(15, 5), Htp = new(16, 15) };
+        var mixtoA = new Servicio { Ruta = new Ruta { Planta = plantaA, NombreRuta = "Doce por doce", TipoServicio = TipoServicio.E }, Fecha = hoy, Turno = 2, Hip = new(14, 30), Htp = new(15, 50), EsMixto = true };
 
         db.AddRange(
             new ModuloUsuario { Modulo = new Modulo { Nombre = "Módulo A", Tipo = TipoModulo.Fijo, Plantas = [new() { Planta = plantaA }] }, Usuario = monA, FechaInicio = hoy.AddDays(-30) },
             new ModuloUsuario { Modulo = new Modulo { Nombre = "Módulo B", Tipo = TipoModulo.Fijo, Plantas = [new() { Planta = plantaB }] }, Usuario = monB, FechaInicio = hoy.AddDays(-30) },
             servicioA,
-            servicioB);
+            servicioB,
+            salidaA,
+            mixtoA);
         await db.SaveChangesAsync();
 
         (ServicioPlantaA, ServicioPlantaB) = (servicioA.Id, servicioB.Id);
+        (ServicioSalidaA, ServicioMixtoA) = (salidaA.Id, mixtoA.Id);
     }
 
     async Task IAsyncLifetime.DisposeAsync()
@@ -122,9 +131,24 @@ public partial class AppConBaseDatos : WebApplicationFactory<Program>, IAsyncLif
         return InputToken().Match(html).Groups[1].Value;
     }
 
+    /// <summary>POST con JSON y el token antiforgery en la cabecera, como lo hace tc.post() en el navegador.</summary>
+    public static async Task<HttpResponseMessage> PostJsonAsync(HttpClient navegador, string url, object datos, bool conToken = true)
+    {
+        var peticion = new HttpRequestMessage(HttpMethod.Post, url) { Content = JsonContent.Create(datos) };
+        if (conToken)
+        {
+            var html = await navegador.GetStringAsync("/Home/Error");
+            peticion.Headers.Add("RequestVerificationToken", MetaToken().Match(html).Groups[1].Value);
+        }
+        return await navegador.SendAsync(peticion);
+    }
+
     /// <summary>Texto del mensaje de error del login (o vacío si no hay).</summary>
     public static string MensajeDeError(string html) =>
         WebUtility.HtmlDecode(MensajeError().Match(html).Groups[1].Value).Trim();
+
+    [GeneratedRegex("<meta name=\"csrf-token\" content=\"([^\"]+)\"")]
+    private static partial Regex MetaToken();
 
     [GeneratedRegex("name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"")]
     private static partial Regex InputToken();

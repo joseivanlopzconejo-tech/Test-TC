@@ -5,7 +5,8 @@ namespace TorreControl.Tests.Controllers;
 
 public class TablaApiTests(AppConBaseDatos app) : IClassFixture<AppConBaseDatos>
 {
-    // Los servicios de prueba son de hoy (UTC) de 05:30 a 06:50: se piden explícitamente con su día.
+    // Los servicios de prueba son de hoy (UTC): entrada 05:30 (1er turno), salida 15:05 y un
+    // mixto 14:30 (2º turno). Se piden explícitamente con su día.
     private static readonly string Hoy = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
     private async Task<HttpClient> ConSesion(string numero)
@@ -18,19 +19,20 @@ public class TablaApiTests(AppConBaseDatos app) : IClassFixture<AppConBaseDatos>
     private static async Task<JsonElement> Json(HttpResponseMessage r) =>
         JsonDocument.Parse(await r.Content.ReadAsStringAsync()).RootElement;
 
-    private static List<string> Plantas(JsonElement tabla) =>
-        tabla.GetProperty("plantas").EnumerateArray().Select(p => p.GetProperty("nombre").GetString()!).ToList();
+    private static List<string> Pestanas(JsonElement tabla) =>
+        tabla.GetProperty("grupos").EnumerateArray().Select(p => p.GetProperty("nombreCorto").GetString()!).ToList();
 
     [Fact]
-    public async Task Monitorista_SoloRecibeLasPlantasDeSuModulo()
+    public async Task Monitorista_SoloRecibeLasPlantasDeSuModulo_ConSuPestanaMixto()
     {
         var navegador = await ConSesion(AppConBaseDatos.MonitoristaA);
 
-        var tabla = await Json(await navegador.GetAsync($"/api/tabla?dia={Hoy}&desde=00:00&hasta=08:00"));
+        var tabla = await Json(await navegador.GetAsync($"/api/tabla?dia={Hoy}&turno=1"));
 
-        Assert.Equal(["Planta A"], Plantas(tabla));
-        var servicio = Assert.Single(tabla.GetProperty("plantas")[0].GetProperty("servicios").EnumerateArray());
-        Assert.Equal("Centro", servicio.GetProperty("ruta").GetString());
+        // Planta A y su pestaña de mixtos; nada de la planta B. Sin nombre corto se usa el nombre.
+        Assert.Equal(2, Pestanas(tabla).Count);
+        Assert.All(tabla.GetProperty("grupos").EnumerateArray(), g => Assert.StartsWith("Cliente de prueba · Planta A", g.GetProperty("nombreCompleto").GetString()));
+        var servicio = Assert.Single(tabla.GetProperty("grupos")[0].GetProperty("servicios").EnumerateArray());
         Assert.Equal("05:30", servicio.GetProperty("hip").GetString());
     }
 
@@ -39,32 +41,47 @@ public class TablaApiTests(AppConBaseDatos app) : IClassFixture<AppConBaseDatos>
     {
         var navegador = await ConSesion(AppConBaseDatos.Supervisor);
 
-        var tabla = await Json(await navegador.GetAsync($"/api/tabla?dia={Hoy}&desde=00:00&hasta=08:00"));
+        var tabla = await Json(await navegador.GetAsync($"/api/tabla?dia={Hoy}&turno=1"));
 
-        Assert.Equal(["Planta A", "Planta B"], Plantas(tabla));
+        Assert.Equal(["PLANTA A", "PLANTA A", "Planta B"], Pestanas(tabla));
     }
 
     [Fact]
-    public async Task VentanaSinServicios_DevuelveLaPlantaVacia()
+    public async Task LosMixtosVanSoloEnSuPestana_YCadaPestanaCuentaPorTurno()
     {
         var navegador = await ConSesion(AppConBaseDatos.MonitoristaA);
 
-        var tabla = await Json(await navegador.GetAsync($"/api/tabla?dia={Hoy}&desde=16:00&hasta=00:00"));
+        var tabla = await Json(await navegador.GetAsync($"/api/tabla?dia={Hoy}&turno=2"));
+        var grupos = tabla.GetProperty("grupos").EnumerateArray().ToList();
+        var normal = grupos.Single(g => !g.GetProperty("esMixto").GetBoolean());
+        var mixto = grupos.Single(g => g.GetProperty("esMixto").GetBoolean());
 
-        // La pestaña sigue existiendo (con contador 0) aunque no tenga servicios en esa ventana.
-        Assert.Empty(tabla.GetProperty("plantas")[0].GetProperty("servicios").EnumerateArray());
-        Assert.Equal(3, tabla.GetProperty("ventana").GetProperty("turno").GetInt32());
+        // 2º turno: en la pestaña normal solo la salida 15:05; el mixto, solo en su pestaña.
+        Assert.Equal("S", Assert.Single(normal.GetProperty("servicios").EnumerateArray()).GetProperty("tipo").GetString());
+        Assert.Equal("Doce por doce", Assert.Single(mixto.GetProperty("servicios").EnumerateArray()).GetProperty("ruta").GetString());
+        Assert.EndsWith("-M", mixto.GetProperty("clave").GetString());
+
+        // Contadores por turno ("0" = día completo). La salida 15:05 llega 16:15: el 3er turno aún
+        // la ve para capturar su llegada.
+        Assert.Equal(Conteos(1, 1, 1, 2), Conteos(normal));
+        Assert.Equal(Conteos(0, 1, 1, 1), Conteos(mixto));
     }
 
-    [Theory]
-    [InlineData("dia=10-03-2026")]
-    [InlineData("desde=8:00pm")]
-    [InlineData("hasta=25:00")]
-    public async Task ParametrosInvalidos_Responden400(string consulta)
+    private static Dictionary<string, int> Conteos(int t1, int t2, int t3, int dia) =>
+        new() { ["1"] = t1, ["2"] = t2, ["3"] = t3, ["0"] = dia };
+
+    private static Dictionary<string, int> Conteos(JsonElement grupo) =>
+        grupo.GetProperty("conteos").EnumerateObject().ToDictionary(p => p.Name, p => p.Value.GetInt32());
+
+    [Fact]
+    public async Task TurnoInvalidoODiaInvalido_Responden400()
     {
         var navegador = await ConSesion(AppConBaseDatos.MonitoristaA);
 
-        Assert.Equal(HttpStatusCode.BadRequest, (await navegador.GetAsync($"/api/tabla?{consulta}")).StatusCode);
+        foreach (var consulta in new[] { "dia=10-03-2026", "turno=4", "turno=-1", "turno=dos" })
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, (await navegador.GetAsync($"/api/tabla?{consulta}")).StatusCode);
+        }
     }
 
     [Fact]

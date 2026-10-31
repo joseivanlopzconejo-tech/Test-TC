@@ -299,20 +299,56 @@ namespace TorreControl.Web.Data.Migrations
                         new
                         {
                             Id = 1,
-                            Color = "#D64545",
+                            Color = "#F4A6A6",
                             Nombre = "Apagada"
                         },
                         new
                         {
                             Id = 2,
-                            Color = "#E0B020",
+                            Color = "#F6D88A",
                             Nombre = "Trayecto"
                         },
                         new
                         {
                             Id = 3,
-                            Color = "#2E9E5B",
-                            Nombre = "Finalizado"
+                            Color = "#B5E8B0",
+                            Nombre = "Encendida"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Color = "#D9C3A5",
+                            Nombre = "En base"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Color = "#CDB8F2",
+                            Nombre = "Detenida"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Color = "#C8D0DA",
+                            Nombre = "Pérdida de cobertura"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Color = "#A7B1BE",
+                            Nombre = "Falla GPS"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Color = "#F2A27E",
+                            Nombre = "Sin respuesta del operador"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Color = "#E89393",
+                            Nombre = "Falla mecánica"
                         });
                 });
 
@@ -582,6 +618,11 @@ namespace TorreControl.Web.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("NombreCorto")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
@@ -638,8 +679,8 @@ namespace TorreControl.Web.Data.Migrations
                     b.Property<bool>("EsEspecial")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("EstatusId")
-                        .HasColumnType("int");
+                    b.Property<bool>("EsMixto")
+                        .HasColumnType("bit");
 
                     b.Property<DateOnly>("Fecha")
                         .HasColumnType("date");
@@ -662,6 +703,9 @@ namespace TorreControl.Web.Data.Migrations
                     b.Property<int>("HtrModificaciones")
                         .HasColumnType("int");
 
+                    b.Property<bool>("NoOpero")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("OperadorId")
                         .HasColumnType("int");
 
@@ -683,8 +727,6 @@ namespace TorreControl.Web.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreadoPorId");
-
-                    b.HasIndex("EstatusId");
 
                     b.HasIndex("Fecha");
 
@@ -741,12 +783,32 @@ namespace TorreControl.Web.Data.Migrations
                         new
                         {
                             Id = 4,
-                            Nombre = "Cliente"
+                            Nombre = "Cliente / planta"
                         },
                         new
                         {
                             Id = 5,
                             Nombre = "Otro"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Nombre = "Cruce de tren"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Nombre = "Accidente vial"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Nombre = "Bloqueo o manifestación"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Nombre = "Clima"
                         });
                 });
 
@@ -1068,11 +1130,6 @@ namespace TorreControl.Web.Data.Migrations
                         .HasForeignKey("CreadoPorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("TorreControl.Web.Models.EstatusUnidad", "Estatus")
-                        .WithMany()
-                        .HasForeignKey("EstatusId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("TorreControl.Web.Models.Operador", "Operador")
                         .WithMany()
                         .HasForeignKey("OperadorId")
@@ -1090,8 +1147,6 @@ namespace TorreControl.Web.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreadoPor");
-
-                    b.Navigation("Estatus");
 
                     b.Navigation("Operador");
 

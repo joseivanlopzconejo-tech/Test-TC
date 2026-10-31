@@ -39,33 +39,4 @@ public class ReglasTurno(IOptions<ReglasNegocioOptions> opciones)
 
         return (inicio, fin);
     }
-
-    /// <summary>
-    /// Un servicio es MIXTO si entre su salida y su llegada pasa por un cambio de turno.
-    /// Se detecta solo; nadie lo marca a mano. Si llega exactamente a la hora del cambio,
-    /// no cuenta como mixto (el viaje ocurrió completo en un turno).
-    /// </summary>
-    public bool EsMixto(DateOnly fecha, TimeOnly hip, TimeOnly htp)
-    {
-        var (inicio, fin) = Intervalo(fecha, hip, htp);
-
-        // Fronteras de turno del día del servicio y del siguiente (por si cruza la medianoche).
-        foreach (var dia in new[] { fecha, fecha.AddDays(1) })
-        {
-            var medianoche = dia.ToDateTime(TimeOnly.MinValue);
-            var fronteras = new[]
-            {
-                medianoche,
-                medianoche.AddHours(_o.HoraInicioTurno2),
-                medianoche.AddHours(_o.HoraInicioTurno3)
-            };
-
-            if (fronteras.Any(f => inicio < f && f < fin))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }

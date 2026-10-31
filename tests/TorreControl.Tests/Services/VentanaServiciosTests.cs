@@ -25,21 +25,26 @@ public class VentanaServiciosTests
     }
 
     [Theory]
-    [InlineData(3, 0, 0, 8)]
-    [InlineData(8, 0, 8, 16)]
-    [InlineData(15, 59, 8, 16)]
-    [InlineData(23, 30, 16, 0)]
-    public void VentanaPorDefecto_EsElTurnoEnCurso(int hora, int minuto, int desde, int hasta)
+    [InlineData(1, "2026-03-10 00:00", "2026-03-10 08:00")]
+    [InlineData(2, "2026-03-10 08:00", "2026-03-10 16:00")]
+    [InlineData(3, "2026-03-10 16:00", "2026-03-11 00:00")]
+    [InlineData(0, "2026-03-10 00:00", "2026-03-11 00:00")] // día completo
+    public void VentanaDeTurno_UsaLosTurnosFijos(int turno, string desde, string hasta)
     {
-        var (dia, d, h) = _ventana.VentanaDelTurnoActual(Dia.ToDateTime(new TimeOnly(hora, minuto)));
+        var (d, h) = _ventana.VentanaDeTurno(Dia, turno);
 
-        Assert.Equal(Dia, dia);
-        Assert.Equal(new TimeOnly(desde, 0), d);
-        Assert.Equal(new TimeOnly(hasta, 0), h);
+        Assert.Equal(DateTime.Parse(desde), d);
+        Assert.Equal(DateTime.Parse(hasta), h);
     }
 
     [Fact]
-    public void ServicioMixto_SeVeEnAmbosTurnos()
+    public void VentanaDeTurno_Inexistente_EsUnError()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => _ventana.VentanaDeTurno(Dia, 4));
+    }
+
+    [Fact]
+    public void ServicioQueCruzaElCambioDeTurno_SeVeEnAmbosTurnos()
     {
         Assert.True(SeMuestra(Dia, "07:05", "08:15", TipoServicio.S, Turno1));
         Assert.True(SeMuestra(Dia, "07:05", "08:15", TipoServicio.S, Turno2));

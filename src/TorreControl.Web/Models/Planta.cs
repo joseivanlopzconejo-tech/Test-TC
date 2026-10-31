@@ -13,6 +13,11 @@ public class Planta
     [Required, MaxLength(100)]
     public string Nombre { get; set; } = "";
 
+    // Como se le dice en la torre (ej. "DANONE"); es lo que muestra la pestaña.
+    // El nombre completo aparece arriba al elegirla.
+    [MaxLength(30)]
+    public string NombreCorto { get; set; } = "";
+
     [Required, MaxLength(100)]
     public string Municipio { get; set; } = "";
 
