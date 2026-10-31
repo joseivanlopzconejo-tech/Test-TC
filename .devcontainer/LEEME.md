@@ -15,9 +15,9 @@ Este Codespace ya trae .NET 10, SQL Server 2022 y los datos de ejemplo. No hay q
 2. Abre esa dirección en una pestaña **normal** del navegador (no en el "Explorador simple"
    del editor). También sirve el globo 🌐 de la fila 5178 en la pestaña **Puertos**.
 
-   Si sale **error 502** aunque el comando diga ✅: en **Puertos**, clic derecho sobre el 5178 →
-   "Dejar de reenviar puerto", luego "Agregar puerto" → `5178`. (Un reenvío creado antes de que
-   la app arrancara puede quedarse "pegado".)
+   Si sale **error 502** aunque el comando diga ✅, el Codespace probablemente se creó con una
+   configuración anterior: reconstrúyelo (clic en "Codespaces" abajo a la izquierda →
+   "Rebuild Container") y vuelve a correr el comando.
 3. Inicia sesión con un usuario demo.
 
 | Número | Rol | Ve |
@@ -37,6 +37,13 @@ bash .devcontainer/probar.sh --reiniciar-datos   # regenerar los datos de ejempl
 tail -f /tmp/torre-control.log   # ver lo que hace la app
 dotnet test                      # correr todas las pruebas
 ```
+
+## ¿Por qué la app comparte la red de la base de datos?
+
+En un Codespace con Docker Compose, si la app vive en su propia red, el reenvío de puertos de
+GitHub no llega hasta ella y responde **502** aunque la app funcione por dentro. Por eso la app
+usa `network_mode: service:db` (igual que las plantillas oficiales de Dev Containers): ambos
+contenedores comparten la red, la base se ve en `localhost:1433` y el puerto 5178 se reenvía bien.
 
 ## Seguridad
 

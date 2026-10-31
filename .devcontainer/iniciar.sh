@@ -16,7 +16,7 @@ fi
 # cargar los datos de ejemplo.
 echo "Esperando a SQL Server..."
 for _ in $(seq 1 60); do
-  (exec 3<>/dev/tcp/db/1433) 2>/dev/null && break
+  (exec 3<>/dev/tcp/127.0.0.1/1433) 2>/dev/null && break
   sleep 2
 done
 

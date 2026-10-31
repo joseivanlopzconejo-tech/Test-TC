@@ -17,7 +17,7 @@ dotnet tool restore
 dotnet restore
 
 dotnet user-secrets set "ConnectionStrings:TorreControl" \
-  "Server=db,1433;Database=TorreControl;User Id=sa;Password=${SA};TrustServerCertificate=True" \
+  "Server=localhost,1433;Database=TorreControl;User Id=sa;Password=${SA};TrustServerCertificate=True" \
   --project "$PROYECTO" > /dev/null
 
 # Contraseña de los usuarios demo: al azar, guardada fuera del repositorio.
@@ -30,7 +30,7 @@ dotnet user-secrets set "DatosEjemplo:Contrasena" "$(cat "$CARPETA_DEMO/contrase
   --project "$PROYECTO" > /dev/null
 
 # Las pruebas de base de datos usan el mismo SQL Server (crean y borran bases temporales).
-echo "export TORRECONTROL_PRUEBAS_SQL='Server=db,1433;User Id=sa;Password=${SA};TrustServerCertificate=True'" \
+echo "export TORRECONTROL_PRUEBAS_SQL='Server=localhost,1433;User Id=sa;Password=${SA};TrustServerCertificate=True'" \
   > "$CARPETA_DEMO/pruebas.sh"
 chmod 600 "$CARPETA_DEMO/pruebas.sh"
 grep -q "torre-control/pruebas.sh" "$HOME/.bashrc" || echo 'source "$HOME/.torre-control/pruebas.sh"' >> "$HOME/.bashrc"

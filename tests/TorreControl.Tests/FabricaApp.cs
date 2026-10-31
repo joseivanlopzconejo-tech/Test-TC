@@ -17,5 +17,8 @@ public class FabricaApp : WebApplicationFactory<Program>
         builder.UseSetting("ConnectionStrings:TorreControl", "Server=no-se-usa;Database=no-se-usa");
         // Puerto HTTPS conocido para que la redirección http -> https sepa a dónde mandar.
         builder.UseSetting("https_port", "443");
+        // Las pruebas no deben depender del entorno: en Codespaces la variable del modo proxy está
+        // encendida y cambiaría el comportamiento de HTTPS. Aquí siempre arranca apagada.
+        builder.UseSetting(TorreControl.Web.Security.ProxyHttps.Clave, "false");
     }
 }

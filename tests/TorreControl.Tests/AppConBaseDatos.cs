@@ -40,6 +40,9 @@ public partial class AppConBaseDatos : WebApplicationFactory<Program>, IAsyncLif
         builder.UseEnvironment("Production");
         builder.UseSetting("ConnectionStrings:TorreControl", _bd.CadenaConexion);
         builder.UseSetting("https_port", "443");
+        // Las pruebas no deben depender del entorno: en Codespaces la variable del modo proxy está
+        // encendida y cambiaría el comportamiento de HTTPS. Aquí siempre arranca apagada.
+        builder.UseSetting(TorreControl.Web.Security.ProxyHttps.Clave, "false");
         builder.UseSetting("Seguridad:LoginPeticionesPorIp", LoginPeticionesPorIp.ToString());
     }
 

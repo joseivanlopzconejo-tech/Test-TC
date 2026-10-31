@@ -6,6 +6,11 @@ services:
       - ../..:/workspaces:cached
       - secretos:/secretos:ro
     command: sleep infinity
+    # La app comparte la RED del contenedor de la base (patrón de las plantillas oficiales de
+    # Dev Containers, ej. dotnet-mssql). Sin esto, en Codespaces el reenvío de puertos no llega
+    # al contenedor de la app y responde 502 aunque la app funcione por dentro. Con esto, la
+    # base se ve en "localhost:1433" y el puerto de la app se reenvía bien.
+    network_mode: service:db
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       # El Codespace publica la app por HTTPS a través de su propio proxy (ver Program.cs).
