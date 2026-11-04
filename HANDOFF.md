@@ -734,3 +734,239 @@ Los "métodos" son `[Fact]`/`[Theory]`; algunas Theory tienen varios casos (`Inl
 - Después: llenado múltiple, **concurrencia RowVersion → 409** (explicarle cómo se prueba: contra
   SQL Server real, dos contextos que leen y guardan), SignalR. Luego Fase 3 (Agregar servicio con
   turno 1/2/3/mixto, usuarios, catálogos, módulos y guardias), Fase 4 (Excel AFORO), 5 (TomTom) y 6 (panel del Jefe).
+
+---
+
+## 11. ANEXO — Copia literal
+
+Textos copiados tal cual del chat [DE MEMORIA: los transcribí de la conversación; respeté la
+ortografía original]. Solo se sustituyeron nombres reales de empresas por **[cliente real]** y
+contraseñas por **[omitida]**. Las imágenes que mandó el usuario no se pueden copiar; se describen
+entre corchetes.
+
+### 11.A Mensajes e instrucciones del usuario (en orden)
+
+**A1.** [Subió el archivo `CLAUDE.md` con la especificación completa. Ese archivo está en el .zip,
+no en Git.]
+
+**A2.**
+> No puedes instalar lo que haga falta en el repositorio
+
+**A3.** (respuestas a mis 8 dudas)
+> Respuestas:
+>
+> 1. Sí. Crea ya la versión mínima de Modulo / ModuloPlanta / ModuloUsuario (con FechaInicio y FechaFin). La completamos en la Fase 3 y me muestras el diseño antes.
+>
+> 2. Sí. Usa "Inicio anticipado por {tipo}: {motivo}." y "Arribo anticipado por…". Un adelanto de hasta 20 min se guarda normal, con "sin novedad".
+>
+> 3. Correcto: ≤10 min pasa directo, 11–20 pide motivo, >20 es "hora sospechosa". Exactamente 20 cae en "motivo".
+>
+> 4. Sí, pero déjalo configurable y márcalo como PROVISIONAL. La hora límite de cada filtro es firme. Todavía no he confirmado en la torre real cuándo se abre cada filtro.
+>
+> 5. Texto libre en la Fase 1. En la Fase 3 vemos si pasan a catálogo, porque el Jefe de Monitoreo da de alta operadores, supervisores y coordinadores.
+>
+> 6. Sí. Solo se pueden asignar roles estrictamente menores al propio. El usuario Sistemas inicial sale de los datos de ejemplo.
+>
+> 7. Todavía no está decidido. En la Fase 1 crea los Servicios directo en los datos de ejemplo. En la Fase 3 preséntame opciones (¿HipBase/HtpBase en Ruta?, ¿puede cambiar por día de la semana?) y yo decido.
+>
+> 8. No subas el CLAUDE.md al repo por ahora: agrégalo al .gitignore. Tiene nombres reales de clientes y rutas, lo limpio antes de publicar.
+>
+> Tus decisiones: de acuerdo con las tres (Turno calculado desde Hip, fechas en hora de CDMX con Auditoría en UTC, y el bloqueo de 5 intentos / 15 min). Dos condiciones: que el límite por IP sea generoso (en una oficina muchos comparten IP) y que el login nunca revele si un número de empleado existe.
+>
+> Entorno: de acuerdo. Aviso para la Fase 2: RowVersion es de SQL Server y SQLite no lo maneja igual. Cuando lleguemos a concurrencia, dime cómo lo vas a probar.
+>
+> Arranca la Fase 0.
+
+**A4.**
+> Intenté darte acceso pero me sigue dando el error 404
+
+**A5.**
+> Intenta de nuevo
+
+**A6.**
+> Te autorizo los cambios necesarios de tu último mensaje borrar el mbundle y crea la rama Main para que el portafolio limpio
+
+**A7.** "Prueba" (tres veces, entre medio una captura de la pantalla "Comparar cambios" de GitHub).
+
+**A8.**
+> Si
+
+(OK para empezar la Fase 1.)
+
+**A9.**
+> Sí a todo, pasa la Fase 1 a main3 explícate mejor
+>
+> 4 lo módulos pendientes a la fase 3
+>
+> Los demás puntos me parecen correctos
+>
+> Te doy el OK
+
+**A10.**
+> Los turnos mixtos o servicios 12x12
+> Siempre empiezan después de las 2 de la tarde depende de la planta por lo general empiezan a las 16 horas en adelante o no sé si a eso te refieres
+>
+> Pero de momento te dejo todo ok
+
+**A11.**
+> Una corrección
+> Me agrada el estilo no están plano pero se puede mejorar busca algo un poco profecional no encuentro las las palabras exactas ya que busco una emulación a excel pero sin ese formato de oficina que da excel.
+>
+> Segundo el orden de las columnas los filtros van después del estatus hora de inicio y hora de fin vas después de los filtros, después sigue observaciónes que son las cosas que pasaron el el turno y luego está bien operadores
+>
+> Mi opción para el mixto es recalcar que tiene mixto que se señale como mixto, para este proyecto es un test es un ejemplo de lo que quiero conseguir.
+> Así que dejaré que uses también tus recomendaciones
+
+**A12.**
+> Como la prueba?
+
+**A13.**
+> Pero no hay una manera de que pueda probarlo sin hacer eso, hacerlo desde el gti
+
+**A14.** Mensajes sobre Codespaces, en orden:
+> No encuentro la de ports para poder correrlo
+
+> Me dió el siguiente comando pero no sé que hacer con el
+>
+> [omitida]
+
+> No me abre no sé si sea  por el navegador
+
+> No me deja
+
+> Me refiero a que segui los 3 pasos y en la página me sigue dando el error
+
+> Te comparto la Terminal cpmpleta al parecer si carga pero sigue sin abrir la pogina [pegó la terminal]
+
+> Hasta ahi quedo ya no avanzo mas
+
+> Probe los comandos que me diste y no sigue con el error 502
+
+> 000
+
+> [Captura de probar.sh con ✅] Hice todos los pasos tal cual pero me seguio dando el error 502 las ultimas 2 lineaas fue sin querer pero ya cuando habia finalizado
+
+> Te comparto evidencia.
+>
+> Te dejo que analices bien el problema y no vayas por una solucion rapida para que podamos encontrar la menera de que lo pueda abrir via remota
+
+> Ya cargo
+
+> Dame el usuario y contrasena para acceder
+
+> Le puedo hacer control c para que me deje escribir o se abre una segunda terminal
+
+**A15.** Correcciones para la Pieza A, en orden:
+> Ya estando dentro puedo ver cosas que me gustarias que cambies te voy a compartir lo que quiero que cambies espera hasta OK para que inicies los cambios
+>
+>
+> 1 La lista tiene que seguir hacia abajo ya que si la dejamos asi va ser muy tedioso para acceder a la informacion, la flechita para que suba o baje la informacion quitala la lista tiene que ser como la informacion de excel que va bajando asi tambien tiene que ser
+>
+> Cuando supervisor o jefe monitoro agrean rutas se ve yo como monitorista no puedo hacer esos cambios.
+>
+> El diseño lo sigo sintiendo plano quiero algo mas dinamico, me gusta el filto de a oscuro y normal que tienes
+>
+> Me gusta que esten enumerados como lo tienes al final
+
+> [Captura de la celda de unidad "1103"] Para las unidades estabien asi solo aun constado el espacio que queda a la derecha agrega un boton que sea el icono de un camion de transporte para que se pueda ver lo siguiente, la unidad titular que es la que se ve en pantalla pero lo que me importa es que es boton pueda acer lo siguiente cambiar la unidad titular o agregar hasta 3 unidades de apoyo
+
+> a) solo el boton del camion elimina el doble click el boton del camion hace esa accion
+> b) excato ese mas +1 o +2 muestra las unidaes de apoyo para esa ruta en especifico
+
+> [Captura de la columna Estatus] Para la columna estus esa columna cambia deacuerdo a los filtros, ejemplo filtro 1 20:10 al dale doble click abre la venta del filtro uno de esa ruta ahi sale estatus, y hay dos cambios cuando se agrega la hora de inicio se pone en ruta y en la hora final cuando llega a planta cambia a PLANTA
+> Cuando esta en servicio de salida es Ser SALIDA o algo asi no se pero que demuestre que esta servicio de salida el nombre no se si este bien, cuando finalice el servicio es en resguardo
+
+> 6a) Te explico todo servicio de entrada estara acompanado de un servicio de salida pero son diferentes primero es entrada terminan todas entrada y enseguida sigue salida (como en columnas agrega un boton que oculte servicio asi sea el de entrada o el de salida pero este seria para el servicio de entrada completo) RESGUARDO solo es para cuando termina el servicio de salida para el servicio de entrada es EN RUTA y EN PLANTA para el servicio de salida ya te los comente para el servicio de salida no hay necesidad de tener filtros ahi la tabla esta en blanco solo para entrada es cuando los aplicamos
+>
+> 6b) Si hay mas opciones (No se supone que todo eso venia en el documento bueno el promt que te mande al inicio?) bueno ya la estamos corrigiendo si hay mas son varias como APAGADA, TRAYECTO, ENCENDIDA, PERDIDA DE COBERTURA, FALLA GPS, etc pero no las tengo a la mano en este momento si agregar las que seas las mas correctas no solo las 5 que te comparti complementa con opciones logicas
+>
+> 6c) EN SALIDA esta bien
+>
+> 6d) Solo cambia el color de EN RUTA por el azul y el naranja a SALIDA
+
+> Faltan mas ajustes para dar el OK
+> 1b a como me refiero es que la tabala sea larga por ejemplo si son 32 unidades osea 32 rutas 32 servicios no se vea comprimido como aqui que aparecen solo 6 que me salagas las 32
+>
+> algo que quiero agregar en la numeracion de la primer columna agrega un boton que pueda ocultar esa fila pero no para ir de una en una tambien da la opcion de ocultar varias filas como en el excel porque no siempre activan todos los servicios
+>
+> 2para los servicios agregados por supervisor el tiene las opciones si los agrega al primer segundo o tercer turno o si es del turno mixto hablando de mixtos se me ocurrio una idea que pueda solucionar los mixtos pero en un momento te comento eso
+>
+> 3 sorprendeme con el diseno inspirate de paginas que tienen disenos profecionales dinamicos intercativos incleibles y limpios y hermosos a la vista pero tambien que el usuario aprenda a usar con facilidad si agregas colores busca los que sean agradables para el ser humano como los pastel
+>
+> 6 aun si pero agrega que que tambien puedan tener su observacion ejemplo ruta centro tiene filtro 20:10 y al darle doble click te abre una ventana donde te dice ESTATUS y abajo un recuadro que dice Observacion esa es opcional al llenarla pero ahi se pueden agregar detalles que despues pueden ir en reportes y su respectivos botones actualizar o ok y cancelar
+
+> [Captura de la tabla] Para las observaciones hay 3 tipos de observaciones la primera la escrita por nosotros en cada ruta, la segunda cuando al iniciar ruta con demora despues de los 10 min te va pegruntar por que la demora y su recuadro de observacion y su motivo puede ser TRAFICO, CRUCE DE TREN etc igual con su boton de cancelar si se equivocaros ademas (el cuadro de la hora se abre con doble clicl para no estar batallando) igual con la hora de llegada a planta al pasar los 10 min te va preguntar por que la demora y se agrega la observacion como INCIDENTES y luego estan la que nosotros podemos llenar manual mente igual la observacion puede ser opcional pero ahi depende de ellos porque depues esa informacion le llega al cliente
+>
+> Para aforo de USARIOS al darle doble click va abrir una ventana que te va dar usuarios de entrada y otra de salida y los llenamos manual mente pero solo acepta de 1 hasta 49 no puede una unidad de transporte subir mas de 50 usarios ni pueden salir numeros negativos el numero se va repartir en 2 entradas en el servicio de entrada y los de salida en su servicio de salida
+
+> [Tres capturas del sistema real de la torre: tabla, pestañas de plantas y grupos de pestañas del navegador] 8a) si como una tipo bitacora marca la hora en la que se guarda la observacion es para darle un extra si tuvo algun percance la unidad o por ejemplo si se agregaron 2 unidades de apoyo que se agrege ahi o por un extra
+> 8b) si como las horas pero ahora que lo pienso quita la observacion de la hora de inicio la que se queda es la hora de fin si llega con alguna demora y la observacion manual
+> 9a) el maximo es 49
+> 9b)No una ruta solo tiene una entrada pero el numero de aforo de entrada que corresponda a su columna de entrada y el de salida a su columna de salida, lo que normal mente hacemos es subir y bajar y llenamos de uno por uno lo que quiero es evitar perder tiempo ahi y llenar todo mas rapido
+>
+> te comparto una imagen de la torre que utilizamos para que me ntiendas la culmna Km esa de momento no
+>
+> Lo que yo trato de hacer con la torre es optimizarla
+>
+> tambien en la parte superior hay 3 botones agregar servicio, descarga captura y exportar
+>
+> agregar servicios eso es solo para supervisores jefe de monitoreo
+> Descarga cap ese es el bueno hace una campura de toda la tabla y eso no me gusta porque hay que ajustar cuando podemos evitar eso
+>
+> Lo primero ese boton lo vamos a dividir en 2 uno para mostrar solo RUTA, NUMERO DE UNIDAD Y ESTATUS de los servicios que tenemos en pantalla si esos servicion los tenemos ocultos no los muestra.
+>
+> y el boton de captura pero de reporte de turno Va tomar en cuenta las columnas RUTA UNIDAD ESTUS LAS HORAS DE INICIO Y FIN SUS RESPECTIVAS DIFERENCIAS AFORO AQUI ESTA LO INTERESANTE VA JUNTAR LAS DOS COLUMNAS PARA QUE SALGAN LOS DE ENTRADA Y SALIDA JUNTOS SIN NECESIDAR DE TOMAR TODA LA CAPTURA COMPLETA Y LAS INCIDENCIAS DETALLADAS EL PORQUE DE LA INCIDENCIA Y SU OBSERVACION
+>
+>
+>
+> Tambien te comparto otra de como estan acomodadas las plantas esa no me gusta me gusta mas la opcion que metiste pero lo que no me hista es que sale el nombre completo de la planta normalmente usamos uno abreviado al selecionar esa planta salga el nombre completo de la planta hasta arriba puede ser una opcion que se pueda ajustar y agregar un comentario por ejemplo mis companeros crean grupos en el navergador y le ponen la hora de inicio de tal ruta esto cuando usabamos el MASTER el que es la imitacion de excel pero de google para guiarnos busco algo similar Como lo podras ver en la otra imagen
+>
+>
+> Ahora van los cambios importantes somos 3 turnos
+> Turno 1 o PRIMER TURNO inicia 00:00 y termina 8:00 Turno 2 SEGUNDO TURNO de las 8:00 hasta las 16:00 y TERCER TURNO 16:00 hasta las 00:00 esos son fijos no los podemos modificar al momento de iniciar secion que la pagina vea la hora y nos meta al turno correspondiente
+>
+> Para los mixtos ahi va por ejemplo una idea en lugar de tenerlo junto seria tenerlo como un servicio aparte Ejmplo de la misma imgen esta [cliente real] Ppero haya otro que diga [cliente real] MIXTO igual que ponamos moverlos de lugar o igual podemos ocultarlos
+>
+> Mi companero ya hizo algo similar se puede ver un reloj donde separa los turnos busco algo similar pero que sea en verdad eficiente para no estar batallando con los turnos de las plantas
+
+> [Captura de pestañas del sistema real] 6e) correcto solo el f4 permite 3 modificaciones
+>
+> 7a) que registe no opero hoy i la oculte
+>
+> 8b) si ya no tendra observacion a veces no se fijan mucho si inicio tarde pero que quede la numeracion de la siguiente manera si inicio a su hora quedaria en 0 y verde pero de cero a 10 naranja y de 10 en adelante rojo para hora de inicio y fin tenemos 10 min de tolerancia si inicia antes como se ve en la captura en verde
+> 9a) el minimo es de 1 ha 49
+> 10 las capturas PNG para pegar
+> 11Solo durante esa secion
+>
+> 13) Busca una opcion que sea eficiente por ejemplo mi companero lo dividio pero yo tenia pensado ponerlo arriba con las otras plantas y tener su turno que me corresponde o su mixto y poder y que esa pestana tenga la opcion de ocultarce si es que no se activo o ya termino y algo mas que esa parte sea como fija porque a veces estamos en la ruta 28 y para cambiar de unidad tenemos que subir y bajar y eso cansa o fastidia con su barra de busqueda como el que dejaste en la primer pagina
+
+> OK, empieza con la Pieza A
+
+**A16.** Después de la Pieza A:
+> [Captura de las pestañas del sistema real, repetida] Con la actualizacion volvio a suceder el mismo error 502 en los 2 puertos
+> Te comparto informacion
+
+> Al hacer el Ctrl shft y P me abre ventana incognito
+
+> Es el mismo error en ambos puertos
+>
+> Tomate tu tiempo de analizar la situacion y  buscar una solucion real y no rapidas
+
+> El puerto 3000 y 3001 si abrieron el 5178 no
+
+> Pasame numero de usuario y codigo para sacar contrasena
+
+> Ahora que me carga no me reconoce las contrasenas
+
+> Listo loco la verdad el diseno es mucho mejor que el anterior me llama la antencion que yo no puedo agregar horas o midificarlas
+>
+> No me sale el icono del camion pero asi esta bien por el momento solo es conseptual y pienso ensenarsela a mi jede
+
+> Me refiero que me deje simular un turno que me deje hacer modificaciones porque se lo quiero mostrar a mi jefe
+
+**A17.** Petición de este HANDOFF (resumen; el texto completo está en el último mensaje del chat):
+pidió un `HANDOFF.md` en la raíz con 11 secciones en orden (dónde nos quedamos, línea de tiempo,
+decisiones, cambios respecto a CLAUDE.md, estado técnico, pruebas, problemas, tareas suyas, cómo
+trabajar, plan siguiente y anexo literal); escribir por secciones con commit en cada una; marcar
+[VERIFICADO] o [DE MEMORIA]; no inventar; al final, commit, un .zip del proyecto completo (con
+.git, CLAUDE.md y HANDOFF.md) diciendo dónde está, y la lista de lo que no pude recordar o verificar.
