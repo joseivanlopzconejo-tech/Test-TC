@@ -270,3 +270,115 @@ Escribí `docs/decisiones.md` con todo eso.
 - Pidió poder simular un turno con modificaciones para su jefe. Propuse el plan D → B → E → C y
   quedé esperando su respuesta (sección 1).
 - Pidió este HANDOFF.
+
+---
+
+## 3. DECISIONES Y POR QUÉ
+
+También están en `docs/decisiones.md` [VERIFICADO: el archivo existe]. Aquí va el razonamiento.
+
+### Respuestas del usuario a mis 8 dudas iniciales (sección 12 de CLAUDE.md) [DE MEMORIA; texto literal en el Anexo]
+1. **Módulos mínimos ya en la Fase 1** (`Modulo`, `ModuloPlanta`, `ModuloUsuario` con
+   `FechaInicio`/`FechaFin`) → se hizo. Diseño completo en la Fase 3, mostrándoselo antes.
+2. **Adelanto con incidente**: textos "Inicio anticipado por…" / "Arribo anticipado por…". Un
+   adelanto de hasta 20 min se guarda normal.
+3. **Escalera**: ≤10 directo, 11–20 pide motivo, >20 hora sospechosa. Exactamente 20 = "motivo".
+4. **Ventana de captura de filtros** (abre 20 min antes): sí, pero **configurable y PROVISIONAL**.
+   La hora límite es firme → `FiltroVentanaAperturaMin` marcado PROVISIONAL en `appsettings.json`.
+5. **Operador**: Supervisor y Coordinador como texto libre en la Fase 1; en la Fase 3 se decide si
+   pasan a catálogo.
+6. **Roles**: solo se asignan roles estrictamente menores; el usuario Sistemas inicial sale de los
+   datos de ejemplo.
+7. **Horarios base (HipBase/HtpBase en Ruta)**: sin decidir; en la Fase 3 hay que presentarle
+   opciones. En la Fase 1 los servicios se crean directo en los datos de ejemplo.
+8. **CLAUDE.md fuera del repo**: va en `.gitignore`; tiene nombres reales y él lo limpiará antes de publicar.
+
+### Decisiones que propuse "salvo que dijera otra cosa" (las aceptó)
+- **`Turno` calculado desde Hip** al guardar, para que nunca contradiga la regla.
+- **Fechas**: horas de negocio en hora de CDMX (DateTime sin zona); Auditoría en UTC.
+- **Bloqueo 5 intentos / 15 min**, con dos condiciones suyas: límite por IP **generoso** (oficina con
+  IP compartida → 100 cada 5 min, configurable) y que el login **nunca revele** si un número existe
+  (mismo mensaje y mismo tiempo, con hash señuelo).
+- **Entorno**: compilo y pruebo aquí; la base real la levanta él con LocalDB. Él advirtió que
+  RowVersion se comporta distinto en SQLite; por eso **todas las pruebas de base usan SQL Server
+  real** (no SQLite).
+
+### Decisiones de la Fase 1 (las aceptó: "Los demás puntos me parecen correctos")
+- **Supervisores, Jefe y Sistemas ven todas las plantas** (era ASUNCIÓN mía).
+- **Cookie de sesión de navegador** (no persistente): en equipos compartidos evita que el turno
+  siguiente quede con el nombre del anterior, lo que ensuciaría la auditoría. Las 8 h deslizantes
+  aplican mientras el navegador está abierto.
+- **Llegar justo en el cambio de turno** no cuenta como "cruce de turno".
+- **Polling (cada 30 s) no renueva la sesión** (cabecera `X-Actualizacion-Automatica`); solo los clics.
+- **Datos de ejemplo auditados como "sistema"** (UsuarioId null). No se creó forma de saltarse la auditoría.
+- **IDOR → 404** (no 403), para no confirmar que un id existe.
+
+### Decisiones técnicas propias (con alternativas descartadas)
+- **.NET 10 LTS** (SDK 10.0.114 en este entorno). **`.sln` clásico** y no `.slnx`, para abrir en
+  cualquier Visual Studio.
+- **Capas**: `Models`, `Data`, `Services` (reglas puras), `Security` (carpeta extra que justifiqué:
+  la autorización no es regla de negocio), `Controllers`, `Views`. Sin repositorios genéricos ni CQRS.
+- **`TimeProvider`** inyectable (y `FakeTimeProvider` en pruebas) en lugar de `DateTime.Now`.
+- **Identity con llaves `int`** (regla "Id autoincremental propio") y tablas renombradas al español.
+- **Auditoría en `SaveChangesAsync`**, no en cada servicio: así nadie "olvida" auditar. Una fila por
+  campo para que el futuro agente de IA consulte con SQL simple. Alternativa descartada: un JSON
+  por cambio.
+- **`SaveChanges` síncrono** llama al asíncrono (sync-over-async), en lugar de lanzar excepción.
+- **Sin `EnableRetryOnFailure`** en EF, porque rompe las transacciones manuales de la auditoría.
+- **Catálogos y roles con `HasData`** (existen en cualquier ambiente); los datos de ejemplo se
+  cargan en tiempo de ejecución (fechas relativas a "hoy") y solo en Development.
+- **CSP estricta sin `unsafe-inline`** → nada de `<script>`/`<style>` en línea ni CDNs; las
+  librerías (Bootstrap, jQuery, Tabulator, Inter) se sirven desde `wwwroot/lib`. El JS arma el DOM
+  con `textContent` (nunca `innerHTML` con datos) y los colores van por CSSOM / variables CSS.
+- **Tabulator 6.6.1** (no la 6.7.x, que tenía menos de 2 semanas). Advertencia conocida en la
+  consola: "frozen columns + selectRange may result in unpredictable behavior"; la probé a fondo y
+  no hubo problemas.
+- **Sin flechas de orden**: la tabla siempre va por hora de salida (petición del usuario).
+- **Codespaces**: Docker Compose (app + SQL Server 2022) con contraseñas aleatorias generadas
+  dentro (volumen `secretos`), nunca en el repo; `network_mode: service:db` (patrón oficial); app
+  en el **puerto 3000**; modo `Proxy:DetrasDeProxyHttps` para el proxy HTTPS de GitHub.
+- **Estatus calculado y NO guardado** (`EstatusServicio`): imposible que diga "En planta" sin Htr.
+- **"No operó" en el servidor** (`Servicio.NoOpero`), no solo visual: lo pidió el usuario (que lo
+  vean todos y salga de reportes). Todo o nada + anti-IDOR + auditoría + Deshacer en la interfaz.
+- **Pestañas: orden, ocultas, etiqueta y nota en `sessionStorage`** (decisión del usuario: solo durante la sesión).
+- **Columnas visibles y densidad en `localStorage`** (preferencia personal del navegador).
+
+---
+
+## 4. CAMBIOS RESPECTO A CLAUDE.md
+
+### Distinto a la especificación
+| CLAUDE.md decía | Ahora es | Por qué |
+|---|---|---|
+| MIXTO se **detecta automático** por horario (5.2) | MIXTO lo **marca el supervisor** al agregar el servicio (`Servicio.EsMixto`); va en **su propia pestaña** ("PLANTA MIXTO") | El usuario explicó que "mixto/12x12" es un tipo de turno de planta. Se quitó `ReglasTurno.EsMixto` |
+| Barra con Día / Hora inicio / Hora fin editables (5.3) | **Día + selector de turno fijo** (1º 00–08, 2º 08–16, 3º 16–24, Día) | El usuario: turnos fijos y no modificables |
+| Jefe de Monitoreo "edita horarios y turnos" (6) | Turnos **fijos** (siguen en `appsettings` como `HoraInicioTurno2/3`, sin interfaz para editarlos) | Decisión del usuario |
+| `EstatusUnidad`: Apagada, Trayecto, Finalizado | **9 estatus de filtro** pastel; "Finalizado" eliminado (Id 3 reutilizado como "Encendida") | Estatus del servicio calculado: EN RUTA / EN PLANTA (E), EN SALIDA / RESGUARDO (S) |
+| `Servicio.EstatusId` | **Eliminado**: el estatus se calcula | No puede contradecir lo capturado |
+| Incidencia "sin novedad" automática en inicio y llegada (5.5) | Hora de **inicio sin observación**; solo **llegada con más de 10 min tarde** pide motivo; ya no hay textos "sin novedad" | Decisión del usuario |
+| Diferencias coloreadas por escalera | Verde (≤0), naranja (1–10), rojo (>10) | Decisión del usuario |
+| Aforo 0–50, doble clic en la celda | **1 a 49**; una ventana con **Entrada y Salida** de la ruta (pendiente, Pieza B) | Decisión del usuario |
+| Unidad: doble clic abre la ventana | **Solo el botón de camión** abre la ventana (pendiente, Pieza C) | Decisión del usuario |
+| Columna "Incidencias" | Se llama **"Observaciones"**; será una **bitácora con hora** (pendiente, Pieza F) | Decisión del usuario |
+| Orden de columnas de la sección 8 | Ruta, Unidad, Estatus (congeladas), F1–F4, Inicio (prog., real, dif.), Llegada (prog., real, dif.), Aforo, Observaciones, Operador | Decisión del usuario |
+| Tabla con altura de pantalla | **Página larga como Excel**, con pestañas, turno, búsqueda y encabezados fijos | Decisión del usuario |
+| — (no existía) | "No operó hoy" (ocultar filas, una o varias), tarjetas KPI, bloques Entradas/Salidas, etiqueta/nota de pestaña, nombre corto de planta | Peticiones del usuario |
+| Descargar Captura: PENDIENTE de formato | **Dos PNG**: "Captura rápida" (Ruta, Unidad, Estatus de lo visible) y "Reporte de turno" (con aforo E y S juntos e incidencias detalladas) | Resuelto por el usuario; pendiente de implementar (Pieza G) |
+| SQL Server **LocalDB** | En la PC del usuario, LocalDB. En este entorno y en Codespaces, **SQL Server 2022 en Docker** | LocalDB no existe en Linux |
+
+### ASUNCIONES
+- ✅ Resueltas: Cliente (se usa) · Incidencia (única por servicio y momento) · TipoIncidencia
+  (ampliado a 9) · Operador (texto libre por ahora) · ventana de los filtros (PROVISIONAL,
+  configurable) · roles estrictamente menores · supervisores ven todo · responsivo a media pantalla
+  (funciona) · adelanto ≤20 = normal.
+- 🟡 Abiertas: diseño completo de Módulos y perfiles de guardia (Fase 3, mostrarle el diseño antes)
+  · nombre de los perfiles de guardia (PENDIENTE; idea: "Guardia Sábado/Domingo") · los módulos
+  fijos todavía NO se limitan a lunes–viernes (pendiente para la Fase 3) · Operador como catálogo (Fase 3).
+
+### PENDIENTES
+- 🟡 Columna **Km**: fuera de alcance ("esa de momento no").
+- 🟡 **Pesos de la calificación** (Fase 6): provisionales.
+- 🟡 **Horarios base / programación** (HipBase/HtpBase, ¿por día de la semana?): presentarle opciones en la Fase 3.
+- 🟡 **Lista real de estatus de filtro**: él no la tenía a la mano; usamos 9 propuestos. El catálogo
+  será editable (Fase 3).
+- 🟡 **Ventana de apertura de los filtros**: confirmar en la torre real.
