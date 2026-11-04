@@ -970,3 +970,76 @@ decisiones, cambios respecto a CLAUDE.md, estado técnico, pruebas, problemas, t
 trabajar, plan siguiente y anexo literal); escribir por secciones con commit en cada una; marcar
 [VERIFICADO] o [DE MEMORIA]; no inventar; al final, commit, un .zip del proyecto completo (con
 .git, CLAUDE.md y HANDOFF.md) diciendo dónde está, y la lista de lo que no pude recordar o verificar.
+
+### 11.B Preguntas que hice y respuesta del usuario
+
+**B1. Dudas iniciales (antes de la Fase 0), copia de mi mensaje:**
+> 1. **Contradicción en Módulos:** la Fase 1 pide pruebas de "el monitorista solo ve las plantas de su módulo", pero las tablas de módulos se diseñan hasta la Fase 3. Propongo crear ya en la Fase 1 una versión mínima: `Modulo` (Nombre, Tipo Fijo/Guardia), `ModuloPlanta` y `ModuloUsuario` (con FechaInicio/FechaFin, para que las guardias venzan solas). En la Fase 3 la completamos. ¿Va?
+> 2. **Hora anticipada sospechosa:** si la unidad sale más de 20 min **antes** y se confirma "Correcta", el texto "Inicio tardío por…" no aplica. ¿Uso *"Inicio anticipado por {tipo}: {motivo}."* (y "Arribo anticipado…")?
+> 3. **Límites exactos de la escalera:** propongo retraso ≤10 → directo; 11–20 → pide motivo; >20 → sospechosa. ¿Exactamente 20 min cae en "motivo"?
+> 4. **Ventana de los filtros (ASUNCIÓN):** con 20 min, el F1 se captura de Hip−100 a Hip−80, el F2 de Hip−80 a Hip−60, y así. Las ventanas quedan una tras otra, sin encimarse. ¿Correcto?
+> 5. **Operador:** ¿Supervisor y Coordinador son texto libre por ahora? ¿O son personas de un catálogo (para reportes futuros)? Propongo texto en la Fase 1.
+> 6. **Escalada de privilegios (ASUNCIÓN):** estoy de acuerdo, y la reforzaría: solo se pueden asignar roles **estrictamente menores** al propio. El usuario Sistemas inicial nace de los datos de ejemplo. ¿Va?
+> 7. **Horarios base:** `Ruta` no tiene Hip/Htp, pero dices que "la programación base nunca se modifica". ¿Esa programación vive en la Ruta (HipBase/HtpBase) y de ahí se generan los Servicios? Para la Fase 1 crearé Servicios directo en los datos de ejemplo, así que esto se puede decidir en la Fase 3.
+> 8. **¿Subo este CLAUDE.md al repositorio?** No trae datos reales, pero menciona el sistema de la empresa. Tú decides si va en un repo público.
+>
+> Decisiones que tomaré salvo que me digas otra cosa: `Turno` calculado desde Hip; horas de negocio en CDMX y Auditoría en UTC; bloqueo corto (5 intentos → 15 min) + límite de intentos por IP + mismo mensaje genérico; compilar y probar aquí, con la base real en su PC con LocalDB.
+
+**Respuesta:** ver A3 (literal).
+
+**B2. Preguntas al cerrar la Fase 1 (copia de mi mensaje):**
+> 1. **ASUNCIÓN: los supervisores, el Jefe y Sistemas ven todas las plantas** sin módulo, porque reparten las guardias. El documento no lo dice explícito.
+> 2. **La sesión muere al cerrar el navegador** (cookie de navegador). En equipos compartidos evita que el siguiente turno capture con el nombre del anterior, lo que ensuciaría la auditoría. Las 8 h deslizantes siguen aplicando mientras el navegador está abierto.
+> 3. **Un servicio que llega justo en el cambio de turno** (por ejemplo 06:50→08:00) **no** cuenta como MIXTO.
+> 4. **Los módulos fijos todavía no se limitan a lunes–viernes.** Solo usan el rango de fechas. Lo resolvemos en la Fase 3, con el diseño completo de guardias.
+> 5. **Aviso para la Fase 2:** la tabla consultará el servidor cada 30 s. Con la sesión deslizante, esas consultas la mantendrían viva para siempre, aunque nadie esté frente a la pantalla. Propongo que las consultas automáticas no cuenten como actividad; solo los clics y capturas. ¿De acuerdo?
+> 6. La carga de datos de ejemplo también queda en la Auditoría, registrada como "sistema" (usuario vacío). No quise crear una forma de saltarse la auditoría.
+
+**Respuesta:** A9 ("Sí a todo… 3 explícate mejor… 4 lo módulos pendientes a la fase 3… Los demás puntos me parecen correctos… Te doy el OK").
+
+**B3. Explicación del punto 3 y pregunta:**
+> Mi recomendación es dejar B como **no MIXTO** y resolver la visibilidad con el plazo. ¿Te parece bien así?
+
+**Respuesta:** A10 ("Los turnos mixtos o servicios 12x12 … Pero de momento te dejo todo ok").
+
+**B4. Sobre MIXTO, después de la tabla en solo lectura:**
+> - **A (recomendada):** separar las dos ideas. Al cruce de turno de la torre le pongo otra etiqueta, por ejemplo **"CAMBIO DE TURNO"**, y sigue detectándose solo para que se vea en ambos turnos. "MIXTO" queda para los servicios 12x12/mixtos que crean los supervisores en la Fase 3.
+> - **B:** dejarlo como está en el documento.
+
+**Respuesta:** A11 ("Mi opción para el mixto es recalcar que tiene mixto que se señale como mixto… dejaré que uses también tus recomendaciones"). Después, en A15, decidió que los mixtos van en su propia pestaña, marcados por el supervisor.
+
+**B5. Preguntas de la ronda de ajustes (resumen fiel de lo que pregunté → su respuesta):**
+- **1b** "¿Prefieres que la página completa baje con la rueda del mouse, y que el encabezado de la tabla y las pestañas de planta se queden pegados arriba mientras bajas?" → tabla larga con todos los servicios (32 de 32), no comprimida.
+- **2** "¿Quieres que esos servicios [agregados por supervisor] se distingan en la tabla (por ejemplo, con una etiqueta ESPECIAL), o que se vean igual que los normales?" → "el tiene las opciones si los agrega al primer segundo o tercer turno o si es del turno mixto". La etiqueta ESPECIAL quedó en el código (`EsEspecial`), pero sin decisión explícita suya.
+- **3** opciones A (movimiento), B (tarjetas de resumen), C (color por estado), D (urgencia visible) → "sorprendeme… colores… pastel". Usé las cuatro.
+- **5a** "¿El doble clic sobre la celda también abre la ventana, o solo el botón del camión?" → solo el botón del camión.
+- **5b** "¿Lo dejo así [+1], o prefieres que el camión muestre el número de apoyos encima?" → "exacto ese más +1 o +2".
+- **6a** "¿RESGUARDO es solo para el servicio de salida…?" → solo salida; entrada = EN RUTA / EN PLANTA; tabla en dos bloques con botón para ocultar cada bloque.
+- **6b** "¿qué opciones de estatus puede elegir el monitorista?" → APAGADA, TRAYECTO, ENCENDIDA, PÉRDIDA DE COBERTURA, FALLA GPS, etc.; "complementa con opciones lógicas".
+- **6c** "¿te gusta SALIDA? Otras ideas: EN SALIDA o RETORNO" → "EN SALIDA esta bien".
+- **6d** colores propuestos → "Solo cambia el color de EN RUTA por el azul y el naranja a SALIDA".
+- **6e** "¿F1, F2 y F3 se capturan una sola vez y quedan fijos, y el F4 permite hasta 3 modificaciones?" → correcto.
+- **7a** "Ocultar filas, ¿solo limpia tu pantalla, o registra 'no operó hoy' para todos y para los reportes?" → "que registe no opero hoy i la oculte".
+- **8a** "La nota manual, ¿es un solo recuadro… o varias notas con hora, como una bitácora?" → bitácora con hora; también notas automáticas (ej. apoyos agregados).
+- **8b** "¿Cómo se abre la nota manual? Propongo doble clic" → sí, como las horas; además, quitar la observación de la hora de inicio.
+- **8b (segunda)** "¿Mantengo la alerta de hora sospechosa…?" → "si ya no tendra observacion…" + colores verde/naranja/rojo. **Interpreté que sí se mantiene la hora sospechosa** [no estoy 100 % seguro de que ese "si" respondiera a eso].
+- **9a** "¿El mínimo de aforo es 0 o 1? ¿máximo 49 o 50?" → máximo 49; "el minimo es de 1 ha 49".
+- **9b** emparejar entrada/salida → "una ruta solo tiene una entrada… lo que quiero es evitar perder tiempo… llenar todo mas rapido".
+- **10** "¿imagen PNG o PDF?" → PNG.
+- **11** "¿se guardan para siempre o solo durante la sesión?" → solo durante la sesión.
+- **13** "¿Dejo de detectar mixtos por horario y solo cuenta la marca del supervisor? ¿La pestaña MIXTO se ve en todos los turnos…?" → "Busca una opcion que sea eficiente…" (pestaña junto a las plantas, que se pueda ocultar, bloque fijo con buscador). **Decidí:** MIXTO solo por marca del supervisor; la pestaña aparece si la planta tiene mixtos ese día y muestra los que tocan en el turno elegido.
+
+**B6. Diagnóstico de Codespaces:**
+> Respóndeme con algo como "A sí, B no, C no".
+
+**Respuesta:** "El puerto 3000 y 3001 si abrieron el 5178 no".
+
+**B7. Pendientes sin respuesta (las últimas):**
+> 1. ¿Paso la **Pieza A a `main`**? Así queda como la versión "oficial" del portafolio.
+> 2. Como lo primero que buscaste fue capturar horas, ¿quieres que la **siguiente sea la D (Horas)** en vez de la B (Aforo)?
+
+> 1. ¿**Cuándo** se lo vas a mostrar? Así sé si hago las cuatro piezas seguidas o te enseño cada una.
+> 2. ¿Te sirve ese **orden** (Horas → Aforo → Filtros → Unidad) y el botón **"Reiniciar demo"**?
+> Con tu **OK** empiezo por la Pieza D (Horas).
+
+**Respuesta:** ninguna todavía (pidió este HANDOFF).
