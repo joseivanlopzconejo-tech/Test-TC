@@ -625,3 +625,112 @@ Los "métodos" son `[Fact]`/`[Theory]`; algunas Theory tienen varios casos (`Inl
    → El **puerto 5178 de ese Codespace quedó dañado** (GitHub guarda el estado de cada puerto y
    sobrevive a las reconstrucciones). **Solución: app en el puerto 3000** ✅.
    No sé con certeza qué dañó el 5178; lo más probable es haberlo reenviado antes de que la app escuchara.
+
+---
+
+## 8. LO QUE LE TOCA HACER AL USUARIO (a mano) [DE MEMORIA]
+
+### Ya hecho (según me dijo o mostró)
+- Dio acceso de GitHub a Claude (el push funcionó después de eso).
+- Puso `main` como rama por defecto en GitHub.
+- Creó un Codespace ("sinister cemetery") en la rama `claude/new-session-y5mvhr`. Lo reconstruyó
+  ("Rebuild Container") desde el botón "Codespaces" de abajo a la izquierda, porque Ctrl+Shift+P
+  le abría una ventana privada de Firefox.
+- Corrió `git pull`, `bash .devcontainer/probar.sh`, `--reiniciar-datos` y el diagnóstico de puertos.
+- Entró a la app (puerto 3000) y revisó el diseño de la Pieza A ("mucho mejor que el anterior").
+
+### Pendiente de su lado
+- **Responder** a mis dos preguntas (cuándo es la demo con su jefe; orden D → B → E → C y botón
+  "Reiniciar demo") y dar el **OK** para la Pieza D.
+- **Responder** si paso la Pieza A a `main`.
+- **Limpiar `CLAUDE.md`** de nombres reales antes de publicarlo (si algún día lo sube).
+- Confirmar en la torre real: la **ventana de apertura de los filtros**, la **lista real de estatus
+  de filtro**, la **programación base** de rutas (Fase 3) y el nombre de los **perfiles de guardia**.
+- Si quiere correrlo en su PC con Windows (no lo ha hecho [DE MEMORIA]):
+  1. instalar .NET 10 SDK, Git y LocalDB;
+  2. `git clone -b claude/new-session-y5mvhr https://github.com/joseivanlopzconejo-tech/Test-TC.git`;
+  3. `dotnet tool restore`, los dos `dotnet user-secrets set` y `dotnet dev-certs https --trust`;
+  4. `dotnet run --project src/TorreControl.Web`.
+- En el Codespace: apagar las copias de prueba que pudieran quedar
+  (`pkill -f -- "--urls http.*:3001"`) y **detener el Codespace** cuando no lo use (horas gratis).
+- En Codespaces la contraseña demo está en `~/.torre-control/contrasena-demo`; cambia al reconstruir.
+
+---
+
+## 9. CÓMO QUIERE QUE TRABAJE (reglas y preferencias)
+
+- **Por fases y por piezas.** Al terminar cada fase o pieza:
+  1. un resumen en lenguaje muy simple ("como para alguien de 12 años"), corto y exacto;
+  2. por cada archivo o concepto nuevo: qué hace, una analogía de la vida real, y cuándo usarlo y cuándo no;
+  3. cómo probarlo él mismo;
+  4. **detenerme y esperar su confirmación (OK)** antes de seguir.
+- **Cuando dice "espera hasta OK", no toco código**: solo anoto, resumo lo que entendí y hago preguntas.
+- **Máximo unos 3 pasos** por mensaje cuando le pido hacer algo a mano. Comandos exactos, uno por
+  uno, con Enter. Avisarle qué NO tocar (por ejemplo, no hacer Ctrl+C en la terminal de la app).
+- Es estudiante de Ingeniería en Sistemas; su C# es básico (no domina POO, EF ni ASP.NET). Quiere
+  **entender** lo que se construye.
+- **Comentarios en el código en español**, explicando el **porqué**, sobre todo en reglas de negocio.
+- **Commits pequeños** con mensajes claros en español.
+- **Nada de sobreingeniería** (sin microservicios, CQRS/MediatR ni repositorios genéricos). Capas
+  simples. Reglas de negocio en `Services`, puras y con pruebas xUnit.
+- **Si una regla es ambigua o hay contradicción, preguntar.** Si veo un riesgo de seguridad o una
+  mala decisión, decírselo directo.
+- **No inventar** lo que está marcado PENDIENTE; dejarlo configurable o preguntar.
+- **No usar datos reales** (clientes, unidades, empleados, logos): todo ficticio. No copiar logos,
+  textos ni código del sistema real.
+- **Seguridad de primer nivel** desde el inicio. Secretos nunca en Git.
+- **Diseño**: profesional, dinámico, interactivo, limpio, fácil de aprender; tonos **pastel**;
+  conservar oscuro y claro; "emulación de Excel pero sin el formato de oficina"; nada plano.
+- Cuando algo falla repetidamente: **"analiza bien el problema y no vayas por una solución rápida"**,
+  **"tómate tu tiempo… buscar una solución real"**. O sea: diagnóstico con datos antes de cambiar
+  cosas. Lo aprendido con el 502: no encadenar suposiciones.
+- No crear PR sin que lo pida. Trabajar en la rama `claude/new-session-y5mvhr` y pasar a `main`
+  solo con su OK.
+- Él usa sobre todo el **celular / navegador** (Codespaces), con Firefox. Algunas capturas suyas
+  muestran el sistema real de su trabajo: usarlas solo para entender, nunca copiar nombres al repo.
+
+---
+
+## 10. PLAN SIGUIENTE
+
+### Antes de empezar, preguntarle
+1. ¿Cuándo es la demo con su jefe? ¿Hago las 4 piezas de edición seguidas o pauso en cada una?
+2. ¿Le sirve el orden **D (Horas) → B (Aforo) → E (Filtros) → C (Unidad)** y un botón **"Reiniciar demo"** (solo Sistemas)?
+3. ¿Paso la Pieza A a `main`?
+
+### Pieza D — Horas (Hir/Htr), paso a paso
+1. **Regla pura** `Services/CapturaHoras.cs` (nombre por decidir), con pruebas:
+   - parsear "HH:mm" (24 h) y formar la fecha-hora completa (considerar el cruce de medianoche
+     respecto a Hip/Htp);
+   - **plazo**: Hir hasta Hip + `PlazoHirHtrMin`; Htr hasta Htp + plazo; pasado eso, bloqueado;
+   - **máximo `MaxModificacionesHirHtr` (2)**: la 2ª reemplaza a la 1ª; después, bloqueado;
+   - **hora sospechosa**: |diferencia| > `SospechosaMin` (20) → Cancelar / Modificar / Correcta;
+   - **inicio**: sin motivo ni observación (decisión del usuario);
+   - **llegada** con retraso > `ToleranciaMin` (10) → motivo (`TipoIncidencia`) + texto obligatorio
+     → `Incidencia` de Llegada con `TextosIncidencia.ConIncidente`; con adelanto > 20 confirmado →
+     texto "anticipado" (preguntar si también pide motivo);
+   - ¿Htr requiere Hir? (supongo que sí; preguntar).
+2. **API** `POST /api/servicios/{id}/hora` ({ momento, hora, confirmarSospechosa?, tipoIncidenciaId?,
+   motivo? }), anti-IDOR, antiforgery, validación en el servidor, auditoría automática.
+   Devolver la fila actualizada.
+3. **Interfaz**: doble clic en "Real" de inicio o de llegada → ventana compacta con máscara HH:mm;
+   ventana de hora sospechosa con 3 botones; ventana de motivo. Enter guarda. El estatus cambia solo.
+4. **Pruebas** de integración (plazo vencido → 409/400, sospechosa sin confirmar, motivo
+   obligatorio, IDOR).
+5. Explicarle según la sección 9 y **detenerme**.
+
+### Después
+- **B. Aforo**: ventana con Entrada y Salida de la ruta (emparejar el servicio E y S de la misma
+  ruta, planta y día), entero 1–49, sin flechas. Cambiar `AforoMax` a 49 y la restricción de la base
+  (hoy `Aforo >= 0`) → mínimo 1.
+- **E. Filtros**: doble clic → Hora (bloqueada), Estatus (9), Observación opcional, Cancelar/Guardar.
+  F1–F3 una sola vez; F4 con hasta 3 modificaciones, que se bloquea al capturar Hir; ventana de
+  captura PROVISIONAL; cuenta regresiva y parpadeo en los últimos 5 min.
+- **C. Unidad**: botón 🚌 → titular + hasta 3 apoyos, búsqueda en vivo con números parciales,
+  lista de sugerencias que se oculta, botones Cancelar · Apoyo · Modificación. Al agregar apoyos,
+  nota automática en la bitácora.
+- **F. Bitácora**: tabla nueva (notas con hora, manuales y automáticas); doble clic en Observaciones.
+- **G. Capturas PNG**: Captura rápida y Reporte de turno.
+- Después: llenado múltiple, **concurrencia RowVersion → 409** (explicarle cómo se prueba: contra
+  SQL Server real, dos contextos que leen y guardan), SignalR. Luego Fase 3 (Agregar servicio con
+  turno 1/2/3/mixto, usuarios, catálogos, módulos y guardias), Fase 4 (Excel AFORO), 5 (TomTom) y 6 (panel del Jefe).
