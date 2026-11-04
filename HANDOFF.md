@@ -382,3 +382,164 @@ También están en `docs/decisiones.md` [VERIFICADO: el archivo existe]. Aquí v
 - 🟡 **Lista real de estatus de filtro**: él no la tenía a la mano; usamos 9 propuestos. El catálogo
   será editable (Fase 3).
 - 🟡 **Ventana de apertura de los filtros**: confirmar en la torre real.
+
+---
+
+## 5. ESTADO TÉCNICO [VERIFICADO el 04/11/2026 salvo que se indique]
+
+### Git
+- Repositorio: `joseivanlopzconejo-tech/Test-TC` (público).
+- Rama de trabajo: **`claude/new-session-y5mvhr`**, al día con `origin`. Antes de este HANDOFF
+  estaba en `ee3d1f4`.
+- **`main` = `origin/main` = `2f4f9b3`** (Fase 1). La Fase 2 / Pieza A todavía NO está en `main`.
+- `main` es la rama por defecto en GitHub [DE MEMORIA: confirmado en su momento con `git ls-remote --symref`].
+- `git status`: limpio, salvo este HANDOFF que se va comprometiendo por secciones.
+- Historial (`git log --oneline`, antes del HANDOFF):
+```
+ee3d1f4 Datos de ejemplo: la contraseña configurada siempre manda en los usuarios demo
+e94c3dd Codespaces: la app pasa al puerto 3000 (el 5178 quedó dañado)
+a2ded7d Codespaces: diagnóstico del 502 con dos copias de prueba
+ee9d8ef Codespaces: la app comparte la red de la base (causa real del 502)
+04e6f39 Codespaces: probar.sh solo detiene la app de su puerto
+0036a9f Pieza A (interfaz): página larga tipo Excel, pestañas, turnos y diseño pastel
+a3878f8 Pieza A (servidor): turnos fijos, estatus calculado, mixtos y 'no operó'
+4651a79 Codespaces: no pre-reenviar el puerto (causa del error 502)
+83460b5 Codespaces: diagnóstico de red en probar.sh
+c20c18c Codespaces: un solo comando para arrancar y revisar la app
+b018c0a Codespaces: escuchar en IPv4 e IPv6 y fijar variables al arrancar
+bb4a914 Codespaces: arranque automático más confiable
+e755a57 Codespaces para probar sin instalar nada y parche de seguridad
+3539a67 Rediseño profesional de la tabla y orden de columnas pedido
+a21efe8 Tabla del monitorista en solo lectura (Fase 2, primera pieza)
+23b91b9 API de la tabla del monitorista (/api/tabla)
+4eb51f4 Ventana de servicios de la tabla y sesión que no se renueva sola
+2f4f9b3 README: secretos de datos de ejemplo, usuarios demo, pruebas y seguridad de la Fase 1
+4db40b7 Datos de ejemplo ficticios para desarrollo
+d1d400c Login por número de empleado, sesión de 8 horas y anti-IDOR
+4354e9d Roles, políticas y acceso a plantas por módulo (anti-IDOR)
+73c34de Auditoría automática de cada cambio
+7dc57bd Modelo de datos del negocio y migración ModeloNegocio
+ce4753f Reglas puras de turno, filtros y reloj de CDMX
+fc51b12 README con stack, estructura y pasos para correr el proyecto
+159dae3 Seguridad base: HTTPS/HSTS, cabeceras, cookies y antiforgery
+58d976f EF Core con SQL Server e Identity con llaves int
+c903a4a Reglas de negocio configurables con validación al arrancar
+c2e1358 Estructura inicial: solución, proyecto MVC y proyecto de pruebas xUnit
+```
+- Convención de commits: en español, pequeños; terminan con `Co-Authored-By: Claude …` y
+  `Claude-Session: …` (lo pide el entorno). Push con `git push -u origin claude/new-session-y5mvhr`.
+
+### .NET y herramientas
+- SDK **10.0.114**; runtimes `Microsoft.NETCore.App` y `Microsoft.AspNetCore.App` **10.0.14**.
+- Herramienta local (`dotnet-tools.json`): **dotnet-ef 10.0.14** → `dotnet tool restore`.
+- En Codespaces, la imagen `mcr.microsoft.com/devcontainers/dotnet:2-10.0-noble` trae el SDK 10.0.403.
+- SQL Server: `mcr.microsoft.com/mssql/server:2022-latest` (Docker).
+
+### Paquetes NuGet
+- `src/TorreControl.Web`:
+  - Microsoft.AspNetCore.Identity.EntityFrameworkCore **10.0.14**
+  - Microsoft.EntityFrameworkCore.SqlServer **10.0.14**
+  - Microsoft.EntityFrameworkCore.Design **10.0.14** (PrivateAssets all)
+  - System.Security.Cryptography.Pkcs **10.0.14**: fijado por seguridad (ver sección 7)
+- `tests/TorreControl.Tests`:
+  - xunit **2.9.3**, xunit.runner.visualstudio **3.1.4**, Microsoft.NET.Test.Sdk **17.14.1**,
+    coverlet.collector **6.0.4**
+  - Microsoft.AspNetCore.Mvc.Testing **10.0.14**, Microsoft.Extensions.TimeProvider.Testing **10.0.0**
+- Librerías de front servidas localmente en `wwwroot/lib`: Bootstrap 5.3.3, jQuery 3.7.1 (las trae
+  la plantilla MVC), jquery-validation, **Tabulator 6.6.1** (MIT) y **Inter 5.2.8** (OFL).
+
+### Estructura (archivos importantes)
+```
+.devcontainer/          Codespaces: app (.NET 10) + SQL Server 2022 con Docker Compose
+  devcontainer.json     servicio "app", postCreate=preparar.sh, postStart=iniciar.sh, puerto 3000
+  docker-compose.yml    app con network_mode: service:db; la contraseña SA se genera al azar
+                        (volumen "secretos")
+  preparar.sh           una vez: dotnet tool restore/restore, user-secrets (conexión a
+                        localhost,1433), contraseña demo en ~/.torre-control/contrasena-demo,
+                        variable de pruebas
+  iniciar.sh            arranca la app en segundo plano (setsid nohup) en http://*:3000,
+                        bitácora en /tmp/torre-control.log
+  probar.sh             arranca si hace falta, revisa que responda, imprime diagnóstico,
+                        dirección y contraseña; opción --reiniciar-datos
+  LEEME.md              guía que se abre sola en el Codespace
+docs/decisiones.md      todas las decisiones acordadas con el usuario
+src/TorreControl.Web/
+  Program.cs            Kestrel sin cabecera Server; ReglasNegocioOptions (ValidateOnStart);
+                        TimeProvider; reglas puras como singletons; DbContext; IUsuarioActual;
+                        DatosEjemplo; ConsultaTabla; Identity (contraseña 10+, bloqueo 5/15,
+                        SignInManagerTorre, FabricaClaimsTorre); revalidación de sesión cada
+                        5 min; LimiteLogin; cookies; antiforgery; HSTS; API devuelve 401/403
+                        en vez de redirigir; pipeline: ProxyHttps → CabecerasSeguridad →
+                        ExceptionHandler/HSTS (no Dev) → HttpsRedirection → Routing →
+                        RateLimiter → AuthN → AuthZ → estáticos AllowAnonymous
+  Controllers/  CuentaController (login, logout, MantenerSesion, acceso denegado) ·
+                HomeController (Index = tabla; Error) · TablaApiController (GET /api/tabla) ·
+                ServiciosApiController (GET /api/servicios/{id}, POST /api/servicios/no-opero)
+  Data/         AppDbContext (+ .Auditoria.cs) · ConsultaTabla · DatosEjemplo · IUsuarioActual ·
+                Migrations/ (InicialIdentity, ModeloNegocio, RolesBase, PiezaA_EstatusMixtosNoOpero)
+  Models/       entidades (Cliente, Planta, Unidad, Ruta, Servicio, UnidadApoyo, Filtro,
+                Modificacion, Incidencia, TipoIncidencia, EstatusUnidad, Operador, Modulo,
+                ModuloPlanta, ModuloUsuario, Auditoria, Usuario, Enumeraciones) · ViewModels/
+                (LoginViewModel, TablaDto)
+  Security/     AccesoPlantas (anti-IDOR) · CabecerasSeguridad · FabricaClaimsTorre · LimiteLogin ·
+                Politicas · ProxyHttps · Roles · ServicioInicioSesion · SesionDeslizante ·
+                SignInManagerTorre · UsuarioActualHttp
+  Services/     reglas puras: CalculadoraFiltros · EstatusServicio · ReglasAcceso ·
+                ReglasNegocioOptions · ReglasTurno · RelojNegocio · TextosIncidencia · VentanaServicios
+  Views/        Cuenta/Login, AccesoDenegado · Home/Index (pantalla de monitoreo) ·
+                Shared/_Layout, Error
+  wwwroot/css/  site.css (tokens pastel oscuro/claro, Inter, login, toasts) · monitoreo.css
+  wwwroot/js/   site.js (tc.post con CSRF, tc.toast con acción) · sesion.js (aviso de sesión) ·
+                tema.js (oscuro/claro)
+                monitoreo/: principal (orquesta, polling 30 s) · api · tabla (Tabulator) ·
+                pestanas · turnos · resumen (KPI) · filtros · dialogo · reloj · util
+tests/TorreControl.Tests/  pruebas (sección 6) + infraestructura: BaseDatosPrueba, AppConBaseDatos,
+                           FabricaApp, Configuracion, Usuarios
+HANDOFF.md              este archivo
+CLAUDE.md               especificación (NO está en Git; va en el .zip)
+```
+
+### Configuración
+- `appsettings.json` → sección **`ReglasNegocio`**: `ZonaHoraria` (America/Mexico_City),
+  `FiltroIntervaloMin` 20, `FiltroVentanaAperturaMin` 20 (PROVISIONAL), `FiltroAdvertenciaMin` 5,
+  `MaxModificacionesFiltro4` 3, `ToleranciaMin` 10, `SospechosaMin` 20, `PlazoHirHtrMin` 60,
+  `MaxModificacionesHirHtr` 2, `MaxApoyos` 3, `AforoMax` 50 (el usuario pidió 49; se aplicará en
+  la Pieza B), `PrecargaMin` 120, `HoraInicioTurno2` 8, `HoraInicioTurno3` 16.
+- `appsettings.Development.json`: `DatosEjemplo:Sembrar = true`.
+- Opcionales leídas en código: `Seguridad:LoginPeticionesPorIp` (100), `Seguridad:LoginVentanaMinutos`
+  (5), `Proxy:DetrasDeProxyHttps` (false por defecto; true en Codespaces).
+- **user-secrets** (`UserSecretsId e3b1976a-0344-4ecb-a3c3-fa0919db7716`), solo nombres:
+  `ConnectionStrings:TorreControl` y `DatosEjemplo:Contrasena`.
+- Variable para pruebas: **`TORRECONTROL_PRUEBAS_SQL`**, cadena SIN `Database=`. En Windows se usa
+  LocalDB si no existe.
+- `launchSettings.json`: perfil `https` → `https://localhost:7045;http://localhost:5178` (solo uso
+  local; en Codespaces se usa el 3000).
+
+### Comandos exactos
+```bash
+# Restaurar
+dotnet tool restore
+dotnet restore
+# Secretos (PC con LocalDB)
+dotnet user-secrets set "ConnectionStrings:TorreControl" "Server=(localdb)\MSSQLLocalDB;Database=TorreControl;Trusted_Connection=True;TrustServerCertificate=True" --project src/TorreControl.Web
+dotnet user-secrets set "DatosEjemplo:Contrasena" "<10+ caracteres con mayúscula, minúscula y número>" --project src/TorreControl.Web
+# Compilar
+dotnet build
+# Migrar (en Development también se aplica solo al arrancar)
+dotnet ef database update --project src/TorreControl.Web
+# Nueva migración
+dotnet ef migrations add <Nombre> -p src/TorreControl.Web -o Data/Migrations
+# Borrar la base de desarrollo (para regenerar los datos de ejemplo)
+dotnet ef database drop -f --project src/TorreControl.Web
+# Pruebas (en Linux, con la variable)
+export TORRECONTROL_PRUEBAS_SQL="Server=localhost,1433;User Id=sa;Password=<...>;TrustServerCertificate=True"
+dotnet test
+# Correr (PC)
+dotnet dev-certs https --trust
+dotnet run --project src/TorreControl.Web          # https://localhost:7045
+# Codespaces
+bash .devcontainer/probar.sh                       # o: --reiniciar-datos
+cat ~/.torre-control/contrasena-demo
+```
+- Resultado al escribir esto: `dotnet build` → **0 advertencias, 0 errores**; `dotnet test` →
+  **120/120 pasan** (con SQL Server en Docker).
