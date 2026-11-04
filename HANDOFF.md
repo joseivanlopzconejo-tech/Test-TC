@@ -392,7 +392,7 @@ También están en `docs/decisiones.md` [VERIFICADO: el archivo existe]. Aquí v
 - Rama de trabajo: **`claude/new-session-y5mvhr`**, al día con `origin`. Antes de este HANDOFF
   estaba en `ee3d1f4`.
 - **`main` = `origin/main` = `2f4f9b3`** (Fase 1). La Fase 2 / Pieza A todavía NO está en `main`.
-- `main` es la rama por defecto en GitHub [DE MEMORIA: confirmado en su momento con `git ls-remote --symref`].
+- `main` es la rama por defecto en GitHub [VERIFICADO el 04/11/2026: `git ls-remote --symref origin HEAD` → `refs/heads/main`].
 - `git status`: limpio, salvo este HANDOFF que se va comprometiendo por secciones.
 - Historial (`git log --oneline`, antes del HANDOFF):
 ```
@@ -1043,3 +1043,28 @@ trabajar, plan siguiente y anexo literal); escribir por secciones con commit en 
 > Con tu **OK** empiezo por la Pieza D (Horas).
 
 **Respuesta:** ninguna todavía (pidió este HANDOFF).
+
+---
+
+## 12. LO QUE NO PUDE RECORDAR O VERIFICAR
+
+- **Textos del anexo**: los transcribí de la conversación. Respeté la ortografía, pero no puedo
+  garantizar que cada espacio o salto de línea sea idéntico. Las **imágenes** del usuario no se
+  conservan; solo las describo.
+- **Mensajes míos**: en 11.B copié mis preguntas casi literales; en B5 están resumidas fielmente,
+  no copiadas palabra por palabra.
+- **Si ese "si" respondía a la hora sospechosa**: en 8b no estoy seguro de que contestara a eso.
+  Interpreté que sí se mantiene. Hay que confirmarlo antes de la Pieza D.
+- **Etiqueta ESPECIAL**: el usuario no decidió de forma explícita si los servicios agregados por un
+  supervisor llevan esa etiqueta. Hoy se muestra si `EsEspecial = true`.
+- **Estado actual del Codespace del usuario** ("sinister cemetery"): no lo puedo ver. Puede quedar
+  una copia de prueba en el puerto 3001 corriendo. No sé si ya lo detuvo.
+- **Cuándo es la demo con su jefe**: no lo dijo.
+- **Conteo exacto de pruebas por commit**: el mensaje de `4354e9d` dice "31 pruebas nuevas", pero
+  ahí agregué 33 casos. Detalle menor; los mensajes de commit no se corrigieron.
+- **Scripts de verificación con Playwright** (`/tmp/claude-0/*.js`) y el script `docker-up.sh`:
+  quedan fuera del repo y se pierden. La contraseña SA de `tc-sql` vive en `/tmp/claude-0/sqlpw`.
+- **Lista real de estatus de filtro y ventana de apertura de los filtros**: el usuario debe confirmarlas en la torre.
+- No probé la app en la **PC con Windows/LocalDB** del usuario (nunca lo intentó). La migración y
+  las pruebas en Windows usan LocalDB por defecto, pero no está verificado en una máquina real.
+
