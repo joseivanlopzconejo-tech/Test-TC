@@ -543,3 +543,85 @@ cat ~/.torre-control/contrasena-demo
 ```
 - Resultado al escribir esto: `dotnet build` → **0 advertencias, 0 errores**; `dotnet test` →
   **120/120 pasan** (con SQL Server en Docker).
+
+---
+
+## 6. PRUEBAS [VERIFICADO: 120 en total, 120 pasan]
+
+Los "métodos" son `[Fact]`/`[Theory]`; algunas Theory tienen varios casos (`InlineData`).
+
+### Unitarias (reglas puras, sin base de datos)
+| Archivo | Métodos | Qué cubre |
+|---|---|---|
+| Services/ReglasNegocioOptionsTests | 7 | El appsettings real es válido y tiene los valores de la especificación; config vacía inválida; tolerancia ≥ sospechosa inválida; advertencia > ventana inválida; turnos en desorden inválidos; zona horaria inexistente inválida |
+| Services/ReglasTurnoTests | 3 (6 casos) | Fronteras de turno 00/08/16; intervalo que cruza medianoche; intervalo normal |
+| Services/CalculadoraFiltrosTests | 2 | F1..F4 = Hip-80/-60/-40/-20; pueden caer el día anterior |
+| Services/RelojNegocioTests | 2 | UTC → CDMX; el "hoy" cambia con la medianoche de México |
+| Services/ReglasAccesoTests | 5 | Vigencia de una asignación a módulo (sin fin, guardia vigente, guardia vencida, futura, módulo inactivo) |
+| Services/VentanaServiciosTests | 10 (4 casos) | Ventana que termina a medianoche; VentanaDeTurno 1/2/3/día; turno inexistente; cruce de turno visible en ambos; llegada con Htr pendiente visible en el turno siguiente; servicio cerrado no visible; precarga; entrada visible desde que abre el F1; servicio de ayer después de medianoche; madrugada de mañana en el 3er turno |
+| Services/EstatusServicioTests | 7 | E: sin nada / último filtro / Hir → EN RUTA / Htr → EN PLANTA; S: sin nada / Hir → EN SALIDA / Htr → RESGUARDO |
+| Services/TextosIncidenciaTests | 4 | Textos sin novedad; tardío con tipo y motivo; sin punto doble; anticipado |
+| Security/RolesTests | 3 (9 casos) | Solo se asignan roles estrictamente menores; rol inventado; sin roles |
+| Security/PoliticasTests | 4 (11 casos) | AgregarServicio (supervisores+), AdministrarMonitoreo (Jefe/Sistemas), AdministrarSistema (Sistemas), la política por defecto rechaza anónimos |
+
+### Integración con SQL Server real (`BaseDatosPrueba`: una base temporal por clase)
+| Archivo | Métodos | Qué cubre |
+|---|---|---|
+| Data/AuditoriaTests | 5 | Alta con Id real; cambio por campo con antes/después; sin cambios no audita; la contraseña nunca se guarda (pero queda constancia); si el guardado falla no queda auditoría |
+| Security/AccesoPlantasTests | 4 (2 casos) | El monitorista solo ve su módulo; no ve otro módulo ni una guardia vencida; sin módulo no ve nada; los supervisores ven todo |
+
+### Integración de punta a punta (`WebApplicationFactory`, entorno Production)
+| Archivo | Métodos | Qué cubre |
+|---|---|---|
+| Security/CabecerasSeguridadTests | 6 | CSP y demás cabeceras; sin `ws://` en producción; HSTS; http → https; cookie antiforgery segura; sin cabecera Server |
+| Security/ProxyHttpsTests | 3 | Sin modo proxy redirige; con modo proxy, redirección relativa y cookie segura |
+| Security/LoginTests | 11 | Sin sesión manda al login conservando la vista; login correcto; auditoría de inicio; cookie de navegador segura; no revela si el número existe; usuario inactivo no entra; returnUrl externo bloqueado; POST sin token rechazado; logout; meta con vencimiento de sesión a ~8 h; "Seguir trabajando" |
+| Security/BloqueoTests | 3 | 5 fallos bloquean; 4 fallos aún dejan entrar; límite por IP → 429 |
+| Security/IdorTests | 4 | Ve su servicio; otro servicio → 404; el supervisor ve todo; API sin sesión → 401 |
+| Security/SesionAutomaticaTests | 1 | El polling no renueva la sesión, un clic sí (con FakeTimeProvider) |
+| Controllers/TablaApiTests | 6 | Monitorista: su planta + su pestaña MIXTO; supervisor: todas; mixtos en su pestaña y contadores por turno; turno o día inválido → 400; sin caché; sin sesión → 401 |
+| Controllers/NoOperoTests | 5 | Marcar oculta y descuenta, y se puede reactivar; auditoría con usuario; un id de otra planta → no se toca ninguno (404); sin token → 400; lista vacía → 400 |
+
+### Lo que falta probar
+- La interfaz JS no tiene pruebas automáticas; se verificó a mano con scripts de Playwright fuera
+  del repo (`/tmp/claude-0/*.js`, que se pierden).
+- `DatosEjemplo` (siembra y la nueva sincronización de contraseñas) no tiene prueba automática;
+  se verificó a mano.
+- El tiempo constante del login (hash señuelo) no se mide, porque sería una prueba frágil.
+- Pendiente para las piezas siguientes: edición de horas (escalera, hora sospechosa, plazo,
+  máximo de modificaciones), aforo 1–49, apoyos (máximo 3, sin duplicados, titular ≠ apoyo),
+  filtros (ventana, una sola captura, F4 con 3 modificaciones y bloqueo con Hir), **concurrencia
+  RowVersion → 409** (el usuario pidió explicar cómo se va a probar), SignalR, capturas PNG,
+  llenado múltiple.
+
+---
+
+## 7. PROBLEMAS Y SOLUCIONES
+
+| Problema | Qué intenté | Qué funcionó |
+|---|---|---|
+| El contenedor no tenía .NET | `dotnet-install.sh` → **403** (el proxy bloquea `builds.dotnet.microsoft.com`) | `apt-get install dotnet-sdk-10.0` (Ubuntu 24.04) ✅ |
+| LocalDB no existe en Linux | — | SQL Server 2022 en Docker (`tc-sql`) para desarrollo y pruebas aquí; el usuario usará LocalDB en Windows ✅ |
+| Docker no corría | `dockerd` a mano | Funciona, pero **se cae seguido**. A veces `containerd` no arranca ("timeout waiting for containerd"): hay que arrancar `containerd` por separado y luego `dockerd --containerd=/run/containerd/containerd.sock`. Si queda un `/var/run/docker.pid` viejo, borrarlo. Una vez el contenedor quedó corrupto ("RWLayer … unexpectedly nil") y lo recreé. Script auxiliar en `/tmp/claude-0/docker-up.sh` (se pierde) |
+| Las pruebas fallan con "pre-login handshake" | — | SQL Server todavía arrancando: esperar a "ready for client connections" ✅ |
+| `git push` 403 ("Claude doesn't have GitHub access") | Explicar al usuario cómo dar acceso; bundle como plan B | Después de que él ajustó el acceso, "Intenta de nuevo" → push OK ✅ |
+| El usuario veía 404 al dar acceso | Le expliqué que GitHub da 404 si no hay sesión iniciada | Resuelto por él [DE MEMORIA] |
+| Cambiar la rama por defecto | Mis herramientas no pueden | Lo hizo él en Settings (desde el navegador, no la app) ✅ |
+| `pkill -f patrón` mataba mi propia terminal (exit 144) | — | Poner los comandos de matar en un script aparte (el patrón no queda en la línea de comandos) |
+| Paquete vulnerable `System.Security.Cryptography.Pkcs` 9.0.11 (de Microsoft.Data.SqlClient) | — | Fijado en 10.0.14 en el csproj ✅ (`dotnet list package --vulnerable` sin hallazgos) |
+| La imagen devcontainer `1-10.0-noble` traía un SDK RC | — | Usar `2-10.0-noble` (SDK 10.0.403) ✅ |
+| Codespaces: **502** en el puerto reenviado | Esta cadena tomó muchos intentos, porque la app siempre respondía 200 por dentro. Ver la tabla siguiente | ✅ Puerto 3000 |
+| Codespaces: la contraseña demo no la aceptaba | — | Al reconstruir se genera otra contraseña y la base se conserva. `DatosEjemplo.SincronizarContrasenaAsync` actualiza la contraseña y desbloquea. Se usó `probar.sh --reiniciar-datos` ✅ |
+| El usuario apretó Ctrl+Shift+P en Firefox → abrió ventana privada | — | Usar F1 o el botón "Codespaces" de abajo a la izquierda → Rebuild Container ✅ |
+| El usuario escribió `pkill -f "--urls…"` sin `--` y se mostró la ayuda de pkill | — | El comando correcto es `pkill -f -- "--urls http.*:300"` |
+
+### Cronología del 502 en Codespaces (qué NO era y qué sí)
+1. Detectar la app por nombre de proceso → falso positivo con la extensión C# → ahora se detecta por puerto. **No era la causa.**
+2. IPv6: `--urls http://*`. El diagnóstico mostró IPv6 desactivado, pero `localhost` resuelve a IPv4. **No era.**
+3. Variables de entorno faltantes (modo proxy) → error 500 en vez de 502; corregido. **No era el 502.**
+4. Reenvío "pegado" por `forwardPorts` → se quitó. **No era (o no bastó).**
+5. Red separada (app y base en distintas redes) → `network_mode: service:db` (plantillas oficiales). La app conecta bien. **No bastó.**
+6. Diagnóstico con copias en el 3000 (IPv4) y el 3001 (IPv4+IPv6), en segundo plano: **las dos abrieron; el 5178 no.**
+   → El **puerto 5178 de ese Codespace quedó dañado** (GitHub guarda el estado de cada puerto y
+   sobrevive a las reconstrucciones). **Solución: app en el puerto 3000** ✅.
+   No sé con certeza qué dañó el 5178; lo más probable es haberlo reenviado antes de que la app escuchara.
